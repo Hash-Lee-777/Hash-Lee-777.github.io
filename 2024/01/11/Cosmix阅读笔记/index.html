@@ -477,41 +477,39 @@
 
         <div class="card-content article-card-content">
             <div id="articleContent">
-                <h3 id="0-Abstract">0 Abstract</h3>
+                <h3 id="abstract">0 Abstract</h3>
 <p>提出了一种两分支对称网络架构，能够同时处理来自源域（例如合成）的点云和来自目标域（例如现实世界）的点云。每个分支通过集成来自另一域的选定数据片段并利用从源标签和目标（伪）标签导出的<strong>语义信息</strong>在一个域内运行。</p>
-<hr>
-<h3 id="1-Introduction">1 Introduction</h3>
+<hr />
+<h3 id="introduction">1 Introduction</h3>
 <p>贡献主要是以下几点：</p>
 <p>1.他们引入了新的领域自适应场景（4个无监督和4个半监督），用于3D语义分割任务，利用最近的带有相机和激光雷达的2D-3D驱动数据集；</p>
 <p>2.他们提出了一种新的具有无监督跨模态损失的DA方法，该方法加强了多模态一致性，并与其他现有的无监督技术互补；</p>
 <p>3.他们设计了一种鲁棒的双头结构，该结构将跨模态损耗与主要分割目标解耦；</p>
 <p>4.他们评估了xMUDA及其UDA场景，并展示了其卓越的性能。</p>
-<p>代码获取链接：<a target="_blank" rel="noopener" href="https://github.com/saltoricristiano/cosmix-uda">https://github.com/saltoricristiano/cosmix-uda</a></p>
-<hr>
-<h3 id="2-Related-work">2 Related work</h3>
+<p>代码获取链接：https://github.com/saltoricristiano/cosmix-uda</p>
+<hr />
+<h3 id="related-work">2 Related work</h3>
 <p>点云分割中现有的无监督（UDA）和半监督（SSDA）适应方法概述：（后续论文的DA框架可以从中针对有代码的进行选取）</p>
-<p><img src="1.png" alt=""></p>
-<hr>
-<h3 id="3-Cosmix">3 Cosmix</h3>
-<h4 id="3-1-Preliminaries-and-definitions">3.1 Preliminaries and definitions</h4>
+<p><img src="1.png" /></p>
+<hr />
+<h3 id="cosmix">3 Cosmix</h3>
+<h4 id="preliminaries-and-definitions">3.1 Preliminaries and definitions</h4>
 <p>该方法是在两个不同的混合点云集上进行训练的，第一个集合是由源点云与未标记<strong>目标点云</strong>的伪标记部分（或补丁）组成的。<strong>目标补丁</strong>将目标模态引入源域中，使更改后的源域与目标域更加<strong>相似</strong>。第二个是未标记的目标点云与随机选择的<strong>源点云补丁</strong>的组合。源补丁使更改后的目标域与源域更加相似，从而防止噪声伪标签的过度拟合。</p>
 <p>数据包含三种——一是源域带标签的点云，二是目标域不带标签的点云，三是目标域少量带标签的点云（用于SSDA的情况，UDA用不到）。</p>
 <p>接下来放Cosmix的结构图：</p>
-<p><img src="2.png" alt=""></p>
+<p><img src="2.png" /></p>
 <p>在上层分支，源域点云与目标域点云的选定补丁混合在一起，同时也与在<strong>半监督</strong>情况下的目标域点云的选定补丁混合。未标记的目标补丁来自，这些补丁是与教师网络在训练期间产生的最有信心的伪标签对应的点的子集。受监督的目标补丁则是根据源域训练集中的类频率分布随机选择的点的子集。这一过程的目的是通过混合源域和目标域的信息，使源域更适应目标域，从而提高模型在目标域上的性能。</p>
 <p>在下层分支，目标域点云与源域点云的选定补丁混合在一起，并且在<strong>半监督</strong>情况下，还与目标域点云的选定补丁混合。源补丁是根据它们在训练集中的类频率分布随机选择的点的子集。这一过程旨在通过混合目标域和源域的信息，使目标域更适应源域，以防止过拟合，特别是在有噪声的伪标签存在的情况下。</p>
-<hr>
-<h4 id="3-2-Semantic-selection">3.2 Semantic selection</h4>
+<hr />
+<h4 id="semantic-selection">3.2 Semantic selection</h4>
 <p>接下来是语义选择模块。这个模块的作用是用平衡的数据来训练后续的网络，因为有些类出现频率低，但也含有丰富的信息，不易被考虑进网络。通过这个模块能让所有类别的数据都尽可能被利用。</p>
-<p>$\tilde{\mathcal{Y}}^s=f\left(\mathcal{Y}^s, 1-P_{\mathcal{Y}}^s, \alpha\right)$，这方程描述了一个操作，通过使用函数$f$对源域数据的原始类别标签$\mathcal{Y}^s$进行处理，生成一个经过加权随机采样的子集类别标签$\tilde{\mathcal{Y}}^s$。$\mathcal{Y}^s$是源域数据的原始类别标签，表示每个数据点属于哪个真实的类别，$P_{\mathcal{Y}}^s$是类别在数据集S内出现的频率，超参数$\alpha$用来控制每个点云中的类别比例，$\alpha$越大选择的类别越多，反之也一样。$1-P_{\mathcal{Y}}^s$代表罕见类别有更高的机会被选择，从而达到类别平衡。再来看下层的公式：</p>
-<p>$\tilde{\mathcal{Y}}<em>{\mathrm{U}}^t=g\left(\Phi</em>{\theta^{\prime}}\left(\mathcal{X}<em>{\mathrm{U}}^t\right), \zeta\right)$，其中$\tilde{\mathcal{Y}}</em>{\mathrm{U}}^t$是目标域未标记数据的伪标签，表示通过教师网络产生的预测结果，$\Phi_{\theta^{\prime}}\left(\mathcal{X}<em>{\mathcal{U}}^t\right)$这部分表示目标域未标记数据$\mathcal{X}</em>{\mathrm{U}}^t$通过教师网络（记为 $\Phi_{\theta^{\prime}}$）的前向传播操作。$\zeta$是置信度阈值，如果伪标签有高置信度那就通过筛选。</p>
-<hr>
-<h4 id="3-3-Compositional-mix">3.3 Compositional mix</h4>
+<p><span class="math inline">\(\tilde{\mathcal{Y}}^s=f\left(\mathcal{Y}^s, 1-P_{\mathcal{Y}}^s, \alpha\right)\)</span>，这方程描述了一个操作，通过使用函数<span class="math inline">\(f\)</span>对源域数据的原始类别标签<span class="math inline">\(\mathcal{Y}^s\)</span>进行处理，生成一个经过加权随机采样的子集类别标签<span class="math inline">\(\tilde{\mathcal{Y}}^s\)</span>。<span class="math inline">\(\mathcal{Y}^s\)</span>是源域数据的原始类别标签，表示每个数据点属于哪个真实的类别，<span class="math inline">\(P_{\mathcal{Y}}^s\)</span>是类别在数据集S内出现的频率，超参数<span class="math inline">\(\alpha\)</span>用来控制每个点云中的类别比例，<span class="math inline">\(\alpha\)</span>越大选择的类别越多，反之也一样。<span class="math inline">\(1-P_{\mathcal{Y}}^s\)</span>代表罕见类别有更高的机会被选择，从而达到类别平衡。再来看下层的公式：</p>
+<p><span class="math inline">\(\tilde{\mathcal{Y}}_{\mathrm{U}}^t=g\left(\Phi_{\theta^{\prime}}\left(\mathcal{X}_{\mathrm{U}}^t\right), \zeta\right)\)</span>，其中<span class="math inline">\(\tilde{\mathcal{Y}}_{\mathrm{U}}^t\)</span>是目标域未标记数据的伪标签，表示通过教师网络产生的预测结果，<span class="math inline">\(\Phi_{\theta^{\prime}}\left(\mathcal{X}_{\mathcal{U}}^t\right)\)</span>这部分表示目标域未标记数据<span class="math inline">\(\mathcal{X}_{\mathrm{U}}^t\)</span>通过教师网络（记为 <span class="math inline">\(\Phi_{\theta^{\prime}}\)</span>）的前向传播操作。<span class="math inline">\(\zeta\)</span>是置信度阈值，如果伪标签有高置信度那就通过筛选。</p>
+<hr />
+<h4 id="compositional-mix">3.3 Compositional mix</h4>
 <p>然后是点云混合的步骤，分为三步，一是在各个域上的局部增强，二是点云混合，三是混合后再进行一次全局增强。</p>
-<p>我们来看具体是怎么混合的，这个式子代表了目标域有监督的数据集是否为空，以s到t过程为例，如果不为空，那混合后的数据就等于局部增强后的原域数据与局部增强后的带监督的目标域数据，以及无监督的目标域数据之并，并后做一次全局增强，如果为空则不考虑空的数据，t到s也是一样的道理。<br>
-这里局部增强指的是绕z轴的刚性旋转，这类似于在水平方向旋转数据。这种操作可以模拟点云数据在不同方向上的观测；以及在 x、y 和 z 轴上进行缩放，这可以使数据变得更大或更小；以及随机点的降采样：数据中的点被随机地减少，这可以模拟数据中可能存在的噪音或缺失观测，有助于让模型更鲁棒，因为它可以处理数据的不完整性。<br>
-全局增强除了上面的刚性旋转和降采样外，还有一个点云平移，让数据的位置发生变化，模拟不同观测位置的效果。</p>
-<p><img src="3.png" alt=""></p>
+<p>我们来看具体是怎么混合的，这个式子代表了目标域有监督的数据集是否为空，以s到t过程为例，如果不为空，那混合后的数据就等于局部增强后的原域数据与局部增强后的带监督的目标域数据，以及无监督的目标域数据之并，并后做一次全局增强，如果为空则不考虑空的数据，t到s也是一样的道理。 这里局部增强指的是绕z轴的刚性旋转，这类似于在水平方向旋转数据。这种操作可以模拟点云数据在不同方向上的观测；以及在 x、y 和 z 轴上进行缩放，这可以使数据变得更大或更小；以及随机点的降采样：数据中的点被随机地减少，这可以模拟数据中可能存在的噪音或缺失观测，有助于让模型更鲁棒，因为它可以处理数据的不完整性。 全局增强除了上面的刚性旋转和降采样外，还有一个点云平移，让数据的位置发生变化，模拟不同观测位置的效果。</p>
+<p><img src="3.png" /></p>
 
                 
             </div>
@@ -699,7 +697,7 @@
     <div id="rewardModal" class="modal">
         <div class="modal-content">
             <a class="close modal-close"><i class="fas fa-times"></i></a>
-            <h4 class="reward-title">你的赏识是我前进的动力</h4>
+            <h4 class="reward-title">要恰饭的嘛</h4>
             <div class="reward-content">
                 <div class="reward-tabs">
                     <ul class="tabs row">
