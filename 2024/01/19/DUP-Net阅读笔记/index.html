@@ -4,7 +4,7 @@
 
 <head>
     <meta charset="utf-8">
-    <meta name="keywords" content="Cosmix TPAMI 2023, Lee的小站">
+    <meta name="keywords" content="DUP-Net, Lee的小站">
     <meta name="description" content="">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
@@ -16,7 +16,7 @@
     <!-- Global site tag (gtag.js) - Google Analytics -->
 
 
-    <title>Cosmix TPAMI 2023 | Lee的小站</title>
+    <title>DUP-Net | Lee的小站</title>
     <link rel="icon" type="image/png" href="/favicon.png">
 
     <link rel="stylesheet" type="text/css" href="/libs/awesome/css/all.css">
@@ -314,12 +314,12 @@
 
 
 
-<div class="bg-cover pd-header post-cover" style="background-image: url('/medias/featureimages/23.jpg')">
+<div class="bg-cover pd-header post-cover" style="background-image: url('/medias/featureimages/9.jpg')">
     <div class="container" style="right: 0px;left: 0px;">
         <div class="row">
             <div class="col s12 m12 l12">
                 <div class="brand">
-                    <h1 class="description center-align post-title">Cosmix TPAMI 2023</h1>
+                    <h1 class="description center-align post-title">DUP-Net</h1>
                 </div>
             </div>
         </div>
@@ -460,7 +460,7 @@
                 
                 <div class="post-date info-break-policy">
                     <i class="far fa-calendar-minus fa-fw"></i>发布日期:&nbsp;&nbsp;
-                    2024-01-11
+                    2024-01-19
                 </div>
                 
 
@@ -481,74 +481,54 @@
 
         <div class="card-content article-card-content">
             <div id="articleContent">
-                <h3 id="写在前面的话">写在前面的话</h3>
-<p>latex公式要是不正常显示就加\，来实现转义字符，或者加空格，这篇文章里几个公式一开始以为是插件的问题，试了十几种都不行，弄了几个小时差点弄吐了…</p>
-<p>另外，我们拟把cosmix作为基础的DA框架，在此基础上进行攻击和防御。</p>
-<hr>
+                <p>本文全称是——DUP-Net：用于 3D 对抗点云防御的降噪器和上采样器网络，在第一个工作中，我们准备借鉴本文的思想来作为我们的防御模块之一。</p>
 <h3 id="0-Abstract">0 Abstract</h3>
-<p>提出了一种两分支对称网络架构，能够同时处理来自源域（例如合成）的点云和来自目标域（例如现实世界）的点云。每个分支通过集成来自另一域的选定数据片段并利用从源标签和目标（伪）标签导出的<strong>语义信息</strong>在一个域内运行。</p>
+<p>这段文字讨论了神经网络在3D点云分类中对抗性样本的脆弱性，并说明本文提出了一种名为Denoiser and UPsampler Network（DUP-Net）的防御结构。这两个模块通过删除或添加点来<a href="#s1">重建表面平滑度</a>，其中统计异常值去除（SOR）和数据驱动上采样网络分别被视为去噪器和上采样器。与基准防御相比，DUP-Net具有三个优势。首先，采用DUP-Net作为防御手段，目标模型对<strong>白盒对抗性攻击</strong>更加鲁棒。其次，统计异常值去除提供额外的鲁棒性，因为它是一个<a href="#s2">非可微的去噪操作</a>。第三，上采样网络可以在小型数据集上训练，并且对来自其他点云数据集生成的对抗性攻击具有良好的防御能力。本文进行了各种实验证明DUP-Net在实践中作为防御手段非常有效。最佳防御措施在200个删除点的情况下，消除了83.8%的C&amp;W和l2损失攻击（点移位），50.0%的C&amp;W和Hausdorff距离损失攻击（点添加）以及9.0%的显著性图损失攻击（点删除）在PointNet上。</p>
 <hr>
 <h3 id="1-Introduction">1 Introduction</h3>
-<p>贡献主要是以下几点：</p>
-<p>1.他们引入了新的领域自适应场景（4个无监督和4个半监督），用于3D语义分割任务，利用最近的带有相机和激光雷达的2D-3D驱动数据集；</p>
-<p>2.他们提出了一种新的具有无监督跨模态损失的DA方法，该方法加强了多模态一致性，并与其他现有的无监督技术互补；</p>
-<p>3.他们设计了一种鲁棒的双头结构，该结构将跨模态损耗与主要分割目标解耦；</p>
-<p>4.他们评估了xMUDA及其UDA场景，并展示了其卓越的性能。</p>
-<p>代码获取链接：<a target="_blank" rel="noopener" href="https://github.com/saltoricristiano/cosmix-uda">https://github.com/saltoricristiano/cosmix-uda</a></p>
+<p>DNN对于对抗性样本具有脆弱性，这些对抗性样本是攻击者通过对原始输入添加几乎不可察觉的扰动而恶意创建的。已经有对抗性扰动的例子被用来攻击图像分类服务、语音识别系统和自动驾驶系统。</p>
+<p>现存的防御方法可以分为三个主要类别：输入转换、对抗性训练和梯度掩蔽。除了防御之外，还有一种抵抗攻击的方法是在将对抗性样本输入网络之前检测它们，例如MagNet和基于隐写分析的检测方法。</p>
+<p>本文的主要贡献主要包括：</p>
+<p>（1）提出了两个新的防御模块，以减轻对抗性点云，相较于基准方法具有更好的性能。</p>
+<p>（2）利用去噪层（统计异常值去除）的非可微性质来抵御对抗性白盒攻击。</p>
+<p>（3）上采样网络可以在小型数据集上训练，并且对于来自其他点云数据集生成的对抗性攻击有良好的防御能力。</p>
 <hr>
-<h3 id="2-Related-work">2 Related work</h3>
-<p>点云分割中现有的无监督（UDA）和半监督（SSDA）适应方法概述：（后续论文的DA框架可以从中针对有代码的进行选取）</p>
-<p><img src="1.png" alt=""></p>
+<h3 id="2-Related-Work（略，非重点，后续用到补充）">2 Related Work（略，非重点，后续用到补充）</h3>
 <hr>
-<h3 id="3-Cosmix">3 Cosmix</h3>
-<h4 id="3-1-Preliminaries-and-definitions">3.1 Preliminaries and definitions</h4>
-<p>该方法是在两个不同的混合点云集上进行训练的，第一个集合是由源点云与未标记<strong>目标点云</strong>的伪标记部分（或补丁）组成的。<strong>目标补丁</strong>将目标模态引入源域中，使更改后的源域与目标域更加<strong>相似</strong>。第二个是未标记的目标点云与随机选择的<strong>源点云补丁</strong>的组合。源补丁使更改后的目标域与源域更加相似，从而防止噪声伪标签的过度拟合。</p>
-<p>数据包含三种——一是源域带标签的点云，二是目标域不带标签的点云，三是目标域少量带标签的点云（用于SSDA的情况，UDA用不到）。</p>
-<p>接下来放Cosmix的结构图：</p>
-<p><img src="2.png" alt=""></p>
-<p>在上层分支，源域点云与目标域点云的选定补丁混合在一起，同时也与在<strong>半监督</strong>情况下的目标域点云的选定补丁混合。未标记的目标补丁来自，这些补丁是与教师网络在训练期间产生的最有信心的伪标签对应的点的子集。受监督的目标补丁则是根据源域训练集中的类频率分布随机选择的点的子集。这一过程的目的是通过混合源域和目标域的信息，使源域更适应目标域，从而提高模型在目标域上的性能。</p>
-<p>在下层分支，目标域点云与源域点云的选定补丁混合在一起，并且在<strong>半监督</strong>情况下，还与目标域点云的选定补丁混合。源补丁是根据它们在训练集中的类频率分布随机选择的点的子集。这一过程旨在通过混合目标域和源域的信息，使目标域更适应源域，以防止过拟合，特别是在有噪声的伪标签存在的情况下。</p>
+<h3 id="3-Defenses-against-Adversarial-Point-Cloud">3 Defenses against Adversarial Point Cloud</h3>
+<p>在3D点云防御中的目标，即构建一个对抗性样本具有鲁棒性的网络，即它能够在对抗性点云上正确分类，并在干净点云上几乎没有性能损失。形式上，给定一个分类模型 f 和一个输入 X˜，它可以是原始输入 X，也可以是对抗性输入 X′，防御方法的目标是通过数据增强来训练一个鲁棒的分类器 f’，使得 f’(X˜) = f(X)，或者通过转换 T 对 X˜ 进行转换，使得 f(T(X˜)) = f(X)。</p>
+<p>为了实现这一目标，作者提出了一种由去噪器和上采样器组成的方法，如图1所示，将一个异常值去除层和一个上采样网络添加到分类网络的前端，以实现网络的鲁棒性。这些层是在ModelNet40数据集上进行点云分类的背景下设计的，并与训练过的分类器 f 一起使用。防御函数被表示为 D: X’ → Xˆ，其中 Xˆ 表示去噪和上采样后的点云。受到用于生成更密集和均匀点集的上采样网络的启发，作者定义了损失函数：</p>
+<p>$\mathcal{L}(\mathbf{X}, \hat{\mathbf{X}})=\mathcal{L}_{r e c}(\mathbf{X}, \hat{\mathbf{X}})+\beta \mathcal{L}_{r e p}(\mathbf{X}, \hat{\mathbf{X}})+\gamma|\boldsymbol{\theta}|_2^2$</p>
+<p>其中，$\mathcal{L}_{r e c}$是重构损失，$\mathcal{L}_{r e p}$是排斥损失。θ 表示网络参数，β 用于平衡重构损失和排斥损失，γ 是权重衰减的乘数。这个损失函数的设计旨在通过重构和排斥两方面的损失来训练网络，以提高网络的对抗性。</p>
+<p><a id="s1"></a></p>
+<h3 id="名词解释及问题">名词解释及问题</h3>
+<h4 id="重建表面平滑度">重建表面平滑度</h4>
+<p>重建表面平滑度指的是在3D点云数据中通过一些操作或处理，使得表面在可视化时看起来更加平滑和连续。在3D点云中，表面通常是由大量的离散点表示的，而这些点之间可能存在缺失或不规则，导致在可视化时表面呈现出不光滑的外观。</p>
+<p>在文中提到的上下文中，采用Denoiser and UPsampler Network（DUP-Net）结构，通过两个模块来实现表面平滑度的重建。这两个模块分别是去噪器（Denoiser）和上采样器（Upsampler）。去噪器使用统计异常值去除（Statistical Outlier Removal，SOR），通过删除或调整离群点来去除数据中的噪声，从而提高表面的平滑性。而上采样器则通过在点云中添加新的点，使得表面更加密集，进而达到平滑的效果。<a id="s2"></a></p>
 <hr>
-<h4 id="3-2-Semantic-selection">3.2 Semantic selection</h4>
-<p>接下来是语义选择模块。这个模块的作用是用平衡的数据来训练后续的网络，因为有些类出现频率低，但也含有丰富的信息，不易被考虑进网络。通过这个模块能让所有类别的数据都尽可能被利用。$ \tilde{\mathcal{Y} }^s=f\left(\mathcal{Y}^s, 1-P_{\mathcal{Y} }^s, \alpha\right) $，这方程描述了一个操作，通过使用函数$ f $对源域数据的原始类别标签$ \mathcal{Y}^s $进行处理，生成一个经过加权随机采样的子集类别标签$ \tilde{\mathcal{Y} }^s $。$ \mathcal{Y}^s $是源域数据的原始类别标签，表示每个数据点属于哪个真实的类别，$ P_{\mathcal{Y} }^s $是类别在数据集S内出现的频率，超参数$ \alpha $用来控制每个点云中的类别比例，$ \alpha $越大选择的类别越多，反之也一样。$ 1-P_{\mathcal{Y} }^s $代表罕见类别有更高的机会被选择，从而达到类别平衡。再来看下层的公式：$\tilde{\mathcal{Y}}_{\mathrm{U}}^t=g\left(\Phi_{\theta^{\prime}}\left(\mathcal{X}_{\mathrm{U}}^t\right), \zeta\right)$，其中$\tilde{\mathcal{Y}}_{\mathrm{U}}^t$是目标域未标记数据的伪标签，表示通过教师网络产生的预测结果，$ \Phi_{\theta^{\prime} }\left(\mathcal{X}_{\mathcal{U} }^t\right) $这部分表示目标域未标记数据$ \mathcal{X}_{\mathrm{U} }^t $通过教师网络（记为 $ \Phi_{\theta^{\prime} } $）的前向传播操作。$ \zeta $是置信度阈值，如果伪标签有高置信度那就通过筛选。</p>
+<h4 id="非可微的去噪操作">非可微的去噪操作</h4>
+<p>非可微的去噪操作是指在某一点处不具备导数或梯度的去噪过程。在数学中，可微性表示函数在某一点处具有导数，也就是说，函数在该点处的变化率是定义良好的。然而，一些去噪方法可能包含一些非可微的运算，使得在这些点处无法明确定义导数。</p>
+<p>在神经网络和深度学习中，通常使用梯度下降等优化算法来调整模型参数以最小化损失函数。这就要求损失函数是可微的，以便计算梯度并进行参数更新。如果损失函数中包含非可微的操作，会导致计算梯度时出现问题。</p>
+<p>在上文中提到的文本中，提到统计异常值去除（Statistical Outlier Removal，SOR）作为去噪器，被标记为一种非可微的去噪操作。这可能是因为异常值去除可能采用一些阈值或非线性操作，导致在某些点上无法明确计算梯度。这种非可微的性质可能对神经网络的训练产生影响，因为梯度下降等优化算法通常要求可微性。因此，在设计防御机制时，选择非可微的去噪操作可能是出于增加对抗性攻击的难度或使得对抗样本更难生成的考虑。</p>
 <hr>
-<h4 id="3-3-Compositional-mix">3.3 Compositional mix</h4>
-<p>然后是点云混合的步骤，分为三步，一是在各个域上的局部增强，二是点云混合，三是混合后再进行一次全局增强。</p>
-<p>我们来看具体是怎么混合的，这个式子代表了目标域有监督的数据集是否为空，以s到t过程为例，如果不为空，那混合后的数据就等于局部增强后的原域数据与局部增强后的带监督的目标域数据，以及无监督的目标域数据之并，并后做一次全局增强，如果为空则不考虑空的数据，t到s也是一样的道理。<br>
-这里局部增强指的是绕z轴的刚性旋转，这类似于在水平方向旋转数据。这种操作可以模拟点云数据在不同方向上的观测；以及在 x、y 和 z 轴上进行缩放，这可以使数据变得更大或更小；以及随机点的降采样：数据中的点被随机地减少，这可以模拟数据中可能存在的噪音或缺失观测，有助于让模型更鲁棒，因为它可以处理数据的不完整性。<br>
-全局增强除了上面的刚性旋转和降采样外，还有一个点云平移，让数据的位置发生变化，模拟不同观测位置的效果。</p>
-<p><img src="3.png" alt=""></p>
+<h4 id="为什么统计异常值去除是一个非可微的去噪操作就可以提供额外的鲁棒性？可以通过以下几个方面来理解：">为什么统计异常值去除是一个非可微的去噪操作就可以提供额外的鲁棒性？可以通过以下几个方面来理解：</h4>
+<ol>
+<li><strong>增加复杂性：</strong> 非可微的操作引入了在点云中进行去噪时的非线性特性，这使得对抗性攻击更难以生成。对抗性攻击通常是基于模型的梯度信息，而非可微的操作使得在这些点上无法准确计算梯度，从而增加了攻击的难度。</li>
+<li><strong>限制攻击者的信息：</strong> 非可微的去噪操作可能使得攻击者在生成对抗性样本时更难以了解模型的内部机制。攻击者通常依赖模型的梯度信息来生成对抗性扰动，而非可微性可能会限制攻击者对模型行为的了解。</li>
+<li><strong>提高鲁棒性：</strong> 由于SOR是一种去除离群值的操作，非可微性可能有助于使得去噪更加稳健。在非可微的情况下，对于输入数据中微小的变化，输出可能不会出现剧烈的变化，这有助于模型对于轻微扰动的鲁棒性。</li>
+</ol>
 <hr>
-<h4 id="3-4-Network-update">3.4  Network update</h4>
-<p>接下来我们来看最后一个部分，网络更新的部分。student和teacher位置如图所示，我们还要关注ema部分。</p>
-<p><img src="5.png" alt=""></p>
-<p>$\mathcal{L}_{t o t}=\mathcal{L}_{s \rightarrow t}+\mathcal{L}_{t \rightarrow s}$</p>
-<p>这个公式把学生网络的总损失函数定义为s到t和t到s的分割损失函数之和，需要最小化这个损失函数，实现在每一轮优化模型的分割性能。</p>
-<p>$\theta_i^{\prime}=\beta \theta_{i-1}^{\prime}+(1-\beta) \theta$</p>
-<p>这个公式的作用是将teacher网络的参数  逐渐更新为student网络的参数（θ），通过这种方式来传递teacher网络已有的知识和信息。具体来说，公式的右侧部分$(1-\beta) \theta$表示student网络的当前参数值，而左侧部分$\beta \theta_{i-1}^{\prime}$ 表示上一次更新后的teacher网络参数值，其中$\beta$是一个0-1之间控制更新速度的超参数。通过这个公式，teacher网络的参数在每次更新时会保持一部分上一次的值，同时融合student网络的参数，$\beta$越大更新越慢，但是越稳定，所以要根据实际情况来设置这个参数。</p>
+<h4 id="非线性特性是什么？为什么去噪是非线性操作？为什么非线性操作会导致在某些点上无法明确计算梯度？">非线性特性是什么？为什么去噪是非线性操作？为什么非线性操作会导致在某些点上无法明确计算梯度？</h4>
+<p>非线性特性指的是在数学和函数的上下文中，函数不遵循线性关系的性质。在线性代数中，一个函数如果同时满足加法和数乘的性质，就被称为线性函数。而非线性函数则不满足这些性质，可能包含乘法、除法、指数、对数等非线性运算。</p>
+<p>去噪操作通常是非线性的，因为噪声的性质可能是复杂的、非线性的，并且噪声的影响可能不仅仅是简单的加法。例如，去噪可能涉及到对像素值进行非线性的阈值处理、滤波、或其他形式的变换。这些非线性的操作可以更有效地捕捉和处理图像中的复杂噪声结构。</p>
+<p>在深度学习中，模型的训练通常涉及到梯度下降等优化算法，这些算法依赖于目标函数的梯度。梯度是函数在某一点的变化率，对线性函数而言，梯度是常数，对非线性函数而言，梯度可能在不同点处不同。</p>
+<p>为什么非线性操作会导致在某些点上无法明确计算梯度呢？</p>
+<ol>
+<li><strong>不可导性：</strong> 一些非线性操作在某些点上可能是不可导的。这意味着在这些点上，函数的导数（梯度）不存在，无法明确计算。例如，在阈值函数的跳跃点上，导数未定义。</li>
+<li><strong>不光滑性：</strong> 一些非线性操作可能导致函数在某些点上不光滑。梯度下降算法通常期望函数是光滑的，以便在梯度的指导下有效地更新参数。非线性操作可能破坏这种光滑性，使得在优化过程中更难处理。</li>
+</ol>
+<p>在文中提到的统计异常值去除（SOR）可能包含一些非线性的阈值判定或者排除机制，这可能导致在一些点上无法明确计算梯度，从而增加了模型对抗性攻击的难度。</p>
 <hr>
-<h3 id="4-Experiments">4 Experiments</h3>
-<h3 id="4-1-Datasets-and-metrics">4.1 Datasets and metrics</h3>
-<p>本文共使用了三个数据集：</p>
-<p>（1）SynLiDAR。它是使用虚幻引擎创建的大规模合成数据集，由 198,396 个带注释的点云组成，具有 32 个语义类别。本文使用 19,840 个点云进行训练，使用 1,976 个点云进行验证。</p>
-<p>（2）SemanticPOSS。它由 2,988 个带注释的真实世界点云组成，具有 14 个语义类。本文使用序列 03 进行验证，其余序列进行训练。</p>
-<p>（3）SemanticKITTI。它是一个大规模分割数据集，由 LiDAR 采集流行的 KITTI 数据集 [26]、[30] 组成。它由 43,552 个带注释的现实世界点云组成，具有超过 19 个语义类别。本文使用序列 08 进行验证，其余序列进行训练 。</p>
-<p>（4）nuScenes。它是一个大规模分割数据集。由现实世界的 850 个序列（700 个用于训练，150 个用于验证）组成，总共 34, 000 个带注释的点云，具有 32 个语义类别本文在所有实验中都使用官方的训练和验证分割。</p>
-<hr>
-<h4 id="4-2-Implementation-details-Quantitative-comparisons-for-UDA">4.2 Implementation details &amp; Quantitative comparisons for UDA</h4>
-<p>本文在 PyTorch 中实现了 CoSMix，并在 4块A100 (40GB SXM4) 上运行的实验。使用MinkowskiNet作为点云分割网络 ，特别使用MinkUNet32。</p>
-<p>Source* 模型和 Target* 模型分别对应于在源合成数据集（下界）和目标真实数据集（上界）上训练的模型。</p>
-<p><img src="6.png" alt=""></p>
-<p><img src="7.png" alt=""></p>
-<p><img src="8.png" alt=""></p>
-<hr>
-<h4 id="4-3-Robustness-to-noisy-pseudo-labels">4.3 Robustness to noisy pseudo-labels</h4>
-<p>在伪标签蒸馏的过程中，作者研究了正确设置置信度阈值的重要性。他们通过在不同的置信度阈值范围（从0.65到0.95）重复实验，并在图5b中报告了获得的适应性能。CosMix 对于嘈杂的伪标签表现出鲁棒性，当置信度阈值设为0.65时，达到了40.2mIoU。最佳的适应性能是在置信度阈值为0.85时实现的，为40.4mIoU。使用高置信度阈值0.95时，性能下降到39.2mIoU。作者指出，过高的置信度阈值导致选择的伪标签过少，无法为适应性提供有效的贡献。</p>
-<p><img src="9.png" alt=""></p>
-<hr>
-<h3 id="5-Conclusion">5 Conclusion</h3>
-<p>本文介绍了一种在3D语义分割领域自适应的新方法，其中包含一种新颖的3D点云混合策略，同时利用语义信息和结构信息。该方法包括两个变体：一个用于无监督适应（CoSMix-UDA），另一个用于半监督适应（CoSMix-SSDA）。作者在合成到真实和真实到真实的情境中进行了全面的评估，涵盖了大规模、公开可用的激光雷达数据集，分别在UDA和SSDA设置中进行了实验。实验结果表明，这种方法在两个情境下均显著超过了当前的最先进方法。此外，详细的分析强调了CoSMix内部每个组件的重要性，验证了混合策略在解决3D LiDAR分割中的域偏移问题方面的有效性。</p>
-<p>CoSMix的一个主要限制是依赖于伪标签，使得源域上初始热身模型的质量对于在目标域上的适应性能至关重要。一种替代方法可能涉及实施自监督学习，而不是使用源数据。未来的研究方向可能包括整合自监督学习任务、领域泛化、将CoSMix扩展到无源自适应任务，以及在3D物体检测中的应用。</p>
 
                 
             </div>
@@ -575,7 +555,7 @@
                     </i>
                 </span>
                 <span class="reprint-info">
-                    <a href="http://example.com/2024/01/11/Cosmix%E9%98%85%E8%AF%BB%E7%AC%94%E8%AE%B0/">http://example.com/2024/01/11/Cosmix%E9%98%85%E8%AF%BB%E7%AC%94%E8%AE%B0/</a>
+                    <a href="http://example.com/2024/01/19/DUP-Net%E9%98%85%E8%AF%BB%E7%AC%94%E8%AE%B0/">http://example.com/2024/01/19/DUP-Net%E9%98%85%E8%AF%BB%E7%AC%94%E8%AE%B0/</a>
                 </span>
             </div>
             <div class="reprint__notice">
@@ -784,9 +764,10 @@
 <article id="prenext-posts" class="prev-next articles">
     <div class="row article-row">
         
-        <div class="article col s12 m6" data-aos="fade-up">
+        <div class="article col s12 m6" data-aos="fade-up" data-aos="fade-up">
             <div class="article-badge left-badge text-color">
-                <i class="fas fa-chevron-left"></i>&nbsp;上一篇</div>
+                <i class="far fa-dot-circle"></i>&nbsp;本篇
+            </div>
             <div class="card">
                 <a href="/2024/01/19/DUP-Net%E9%98%85%E8%AF%BB%E7%AC%94%E8%AE%B0/">
                     <div class="card-image">
@@ -804,9 +785,9 @@
                         
                     </div>
                     <div class="publish-info">
-                        <span class="publish-date">
-                            <i class="far fa-clock fa-fw icon-date"></i>2024-01-19
-                        </span>
+                            <span class="publish-date">
+                                <i class="far fa-clock fa-fw icon-date"></i>2024-01-19
+                            </span>
                         <span class="publish-author">
                             
                             <i class="fas fa-bookmark fa-fw icon-category"></i>
@@ -819,6 +800,7 @@
                         </span>
                     </div>
                 </div>
+
                 
                 <div class="card-action article-tags">
                     
@@ -837,13 +819,13 @@
                 下一篇&nbsp;<i class="fas fa-chevron-right"></i>
             </div>
             <div class="card">
-                <a href="/2023/12/27/SqueezeSegV2%E9%98%85%E8%AF%BB%E7%AC%94%E8%AE%B0/">
+                <a href="/2024/01/11/Cosmix%E9%98%85%E8%AF%BB%E7%AC%94%E8%AE%B0/">
                     <div class="card-image">
                         
                         
-                        <img src="/medias/featureimages/3.jpg" class="responsive-img" alt="SqueezeSegV2 ICRA 2018">
+                        <img src="/medias/featureimages/23.jpg" class="responsive-img" alt="Cosmix TPAMI 2023">
                         
-                        <span class="card-title">SqueezeSegV2 ICRA 2018</span>
+                        <span class="card-title">Cosmix TPAMI 2023</span>
                     </div>
                 </a>
                 <div class="card-content article-content">
@@ -854,7 +836,7 @@
                     </div>
                     <div class="publish-info">
                             <span class="publish-date">
-                                <i class="far fa-clock fa-fw icon-date"></i>2023-12-27
+                                <i class="far fa-clock fa-fw icon-date"></i>2024-01-11
                             </span>
                         <span class="publish-author">
                             
