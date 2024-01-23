@@ -4,7 +4,7 @@
 
 <head>
     <meta charset="utf-8">
-    <meta name="keywords" content="DUP-Net, Lee的小站">
+    <meta name="keywords" content="DUP-Net ICCV 2019 阅读笔记, Lee的小站">
     <meta name="description" content="">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
@@ -16,7 +16,7 @@
     <!-- Global site tag (gtag.js) - Google Analytics -->
 
 
-    <title>DUP-Net | Lee的小站</title>
+    <title>DUP-Net ICCV 2019 阅读笔记 | Lee的小站</title>
     <link rel="icon" type="image/png" href="/favicon.png">
 
     <link rel="stylesheet" type="text/css" href="/libs/awesome/css/all.css">
@@ -314,12 +314,12 @@
 
 
 
-<div class="bg-cover pd-header post-cover" style="background-image: url('/medias/featureimages/9.jpg')">
+<div class="bg-cover pd-header post-cover" style="background-image: url('/medias/featureimages/18.jpg')">
     <div class="container" style="right: 0px;left: 0px;">
         <div class="row">
             <div class="col s12 m12 l12">
                 <div class="brand">
-                    <h1 class="description center-align post-title">DUP-Net</h1>
+                    <h1 class="description center-align post-title">DUP-Net ICCV 2019 阅读笔记</h1>
                 </div>
             </div>
         </div>
@@ -520,6 +520,81 @@
 <p>接着，通过裁剪那些落在 μ ± α · σ 范围之外的点，得到修剪后的点集 $\mathbf{X}^{\prime}$，表示为</p>
 <p>$$ \mathbf{X}^{\prime}=\left\{\mathbf{x}_i \mid d_i &lt; \bar{d}+\alpha \cdot \sigma\right\} $$</p>
 <p>根据公式，通过检查每个点的平均距离 $\bar{d}$ 是否小于阈值 $\bar{d}+\alpha \cdot \sigma$ ，可以确定哪些点应该保留在裁剪后的点云数据集中。如果小于这个阈值，那么该点被认为是正常的，将被保留；否则，被认为是离群点，将被移除。这个操作的目的是去除原始点云数据中的离群值，使得点云更加平滑和整洁。调整参数 $\alpha$ 的值可以影响裁剪的严格程度，进而影响最终的点云数据的质量。</p>
+<p>文中指出，尽管攻击者成功欺骗了分类网络，但总会有一定比例的点不可避免地变成异常点，并被统计异常值去除方法捕获并删除。C&amp;W攻击使一些点偏离点云表面的流形，这些异常点主要误导了分类性能。因此，通过预处理层去除的异常值越多，对抗性例子的防御能力就越好。</p>
+<p>$p=\frac{\left|\mathbf{X}_{a d v} \cap\left(\mathbf{X}-\mathbf{X}^{\prime}\right)\right|}{|\mathbf{X}|-\left|\mathbf{X}^{\prime}\right|}$，整个公式表示了对抗性点在被去除的点集中的相对百分比，即被去除的点中有多少是对抗性点。这个百分比提 $p$ 供了一个衡量异常点去除方法对于防御对抗性攻击的效果的度量。这个公式里面各个参数的含义是：</p>
+<p>$\mathbf{X}_{adv}$：表示对抗性点的集合。这个集合的定义因不同的对抗性失真约束而有所不同。</p>
+<p>$\mathbf{X}$：表示原始点云数据集，包含了所有的点。</p>
+<p>$\mathbf{X}^{\prime}$：表示被去除异常值（通过统计异常值去除方法）后的点集。</p>
+<p>$|\mathbf{X}|$：表示点云数据集中点 $\mathbf{X}$ 的总数。</p>
+<p>$|\mathbf{X}^{\prime}|$：表示被去除异常值后的点集中 $\mathbf{X}^{\prime}$ 点的总数。</p>
+<p>通过观察实验结果，作者使用上述Equation计算了SOR和SRS方法的对抗性点百分比，实验结果表明，大多数情况下 SOR方法删除的对抗性点比SRS方法更多。因此SOR方法在防御对抗性点云方面比SRS方法更为有效。</p>
+<hr>
+<h4 id="3-2-Upsampling-Network">3.2 Upsampling Network</h4>
+<p>作者在本节的目标是通过一种防御机制来保护一个分类模型 $f$ ，该模型面临由对手生成的扰动的点云。作者的方法受到流形假设的启发，该假设认为自然图像或点云位于低维流形上。已知扰动的点云偏离了自然点云的 <a href="#s4">低维流形</a>，而这个流形可以由深度网络来近似。为了提高点云的视觉质量，作者提出使用点云上采样将流形外的对抗性样本<strong>重新映射</strong>到自然流形上以重构表面。通过这种方式，对抗性扰动的鲁棒性是通过增强点云的视觉质量来实现的。这种方法相对于其他防御机制具有显著优势，因为它不会截断关键信息以实现鲁棒性。</p>
+<p>具体而言，由于这些扰动通常会删除点云的关键点，作者使用了一个点云上采样网络，该网络输出一个更密集的点云，该点云沿着目标对象的表面分布均匀。在这项工作中考虑的网络是Point Cloud Upsampling Network (PUNet)，该网络从3D模型的基于点的块中学习几何语义，其架构如图所示。</p>
+<p><img src="2.png" alt=""></p>
+<p>接下来是用于衡量点云重建质量的损失函数，其中作者使用了重构损失，其目标是最小化点云的 <a href="#s5">Chamfer距离</a>。重构损失定义如下：</p>
+<p><img src="3.png" alt=""></p>
+<p>$|\hat{\mathbf{X}}|_0$ 表示点云 $\hat{\mathbf{X}}$ 的点的数量。</p>
+<p>$\sum_{\mathbf{x}^{\prime} \in \hat{\mathbf{X}}}$ 表示对点云 $\hat{\mathbf{X}}$ 中的每个点 $\mathbf{x}^{\prime}$ 执行求和。</p>
+<p>$\min _{\mathbf{x} \in \mathbf{X}}\left|\mathbf{x}-\mathbf{x}^{\prime}\right|_2^2$ 表示对于给定的上采样点 $\mathbf{x}^{\prime}$，找到原始点云 $ \mathbf{X}$ 中与之距离最近的点 $\mathbf{x}$，并计算它们之间的 $L_2$ 范数的平方。</p>
+<p>$\frac{1}{|\hat{\mathbf{X}}|_0}$表示将所有这些最近点之间的平方 $L_2$ 范数求和并取平均，以得到平均每个上采样点的重构损失。</p>
+<p>因此，这个公式的目标是衡量原始点云和通过上采样得到的点云之间的差异，其中重构损失的值越小表示上采样后的点云越接近原始点云。这种损失通常用于评估上采样模型的性能，以确保生成的点云在结构上保持与原始点云的相似性。</p>
+<p>综上所述，总的算法流程如图所示：</p>
+<p><img src="4.png" alt=""></p>
+<p>以下是对算法的逐步解释：</p>
+<ol>
+<li><strong>输入：</strong> 算法接收一个点云 $X$，最近邻数量 $k$，异常值截断参数 $\alpha$，以及网络参数 $\theta$。</li>
+<li><strong>初始化：</strong> 初始时，生成一个空的点云 $X’$ 用于存储通过去噪操作保留的点。</li>
+<li><strong>计算平均距离：</strong> 对于每个点 $x_i$，计算它与最近的 $k$ 个邻居的平均距离 $d_i$。</li>
+<li><strong>计算平均距离的均值和标准差：</strong> 计算所有点的平均距离的均值 $\bar{d}$ 和标准差 $\sigma$。</li>
+<li><strong>去噪操作：</strong> 遍历点云 $X$ 中的每个点 $x_i$，如果 $d_i &lt; \bar{d} + \alpha \cdot \sigma$，将该点 $x_i$ 添加到 $X’$ 中，表示该点未被认为是异常点。</li>
+<li><strong>上采样操作：</strong> 将 $X’$ 输入到上采样网络中，生成上采样后的点云 $\bar{X}$。</li>
+<li><strong>分类操作：</strong> 将上采样后的点云 $ f(\bar{X}) $ 中，获取对应的预测标签 $l$。</li>
+<li><strong>输出：</strong> 返回预测标签 $l$。</li>
+</ol>
+<p>这个算法的核心思想是通过去噪操作保留对点云分类有用的信息，然后通过上采样网络增加点的数量，最终通过分类网络进行预测。这样的防御方法旨在提高对抗性攻击的鲁棒性，使模型更难受到攻击。</p>
+<hr>
+<h3 id="4-Experiments">4. Experiments</h3>
+<h4 id="4-1-Experimental-Setup">4.1 Experimental Setup</h4>
+<p><strong>数据集：</strong></p>
+<ul>
+<li>使用了 ModelNet40 数据集，其中包含来自40个不同物体类别的12,311个CAD模型。这些模型中的9,843个用于训练，剩余的2,468个用于测试。</li>
+<li>在生成对抗性点云之前，从每个对象的表面均匀采样了1,024个点，并将它们重新缩放到一个单位立方体内。这一步骤的目的是为了规范化数据的尺寸。</li>
+<li>使用了 Visionair 数据集来训练 DUP-Net，该数据集包含来自 Visionair 仓库的60个不同模型，涵盖了光滑的非刚性物体和陡峭的刚性物体。</li>
+</ul>
+<p><strong>网络和实现细节：</strong></p>
+<ul>
+<li>使用了 PointNet 和 PointNet++ 作为目标分类网络，并使用默认设置对模型进行训练。</li>
+<li>对于提出的 DUP-Net 的训练，对于 ModelNet40，上采样点的数量为2048，上采样率为2；对于 Visionair 数据集，上采样点的数量为4096，上采样率为4。</li>
+<li>每个输入样本包含 $n = 1024$ 个点，用于进行训练。</li>
+<li>平衡权重 $\beta$ 和 $\gamma$ 分别被设置为 0.01 和 $10^{-5}$。</li>
+<li>实现基于 TensorFlow，使用 Adam 优化算法进行训练，训练120个epochs，每个小批次包含28个样本，学习率为0.001。</li>
+</ul>
+<p><strong>攻击评估：</strong></p>
+<ul>
+<li>攻击者首先使用非定向/定向模型生成对抗性样本，然后在目标和防御模型上评估这些生成的对抗性样本的分类准确性。</li>
+<li>非定向/定向模型的低准确性表明攻击是成功的，而防御模型的高准确性表明防御是有效的。</li>
+</ul>
+<hr>
+<h4 id="4-2-Ablation-Study">4.2. Ablation Study</h4>
+<h5 id="SOR-PU-Net-as-Defense">SOR &amp; PU-Net as Defense</h5>
+<p>SOR专门针对的是生成对抗样本的攻击，通过删除对应点实现防御，表格如图所示。</p>
+<p><img src="5.png" alt=""></p>
+<p>PU-Net专门针对的是基于显著性点删除的攻击，其中攻击者有意删除或修改输入点云中的一些关键点，以干扰目标分类模型的性能。结果表明，上采样网络有助于对抗性示例填充对于分类至关重要的缺失点，尤其是在删除数量为200时，防御几乎提高了9%。此外，上采样网络可以在小型数据集上进行训练，并且对来自其他点云数据集生成的对抗性攻击具有良好的泛化能力。</p>
+<p><img src="6.png" alt=""></p>
+<hr>
+<h4 id="4-3-Evaluation-Results-of-DUP-Net">4.3. Evaluation Results of DUP-Net</h4>
+<p>表格1中的最后一列显示了提出的DUP-Net针对PointNet上不同攻击（基于C&amp;W的点移动/点添加/簇添加/物体添加 [34] 和点删除）的整体防御准确性。对于干净的点云数据，DUP-Net略微降低了2%的检测准确性；对于C&amp;W攻击，DUP-Net表现优于基线SRS、提出的SOR和提出的PU-Net。与PU-Net相比，DUP-Net的性能更好，这表明异常值移除操作有效地提升了防御性能。**对于点删除攻击，DUP-Net的防御性能略逊于独立使用PU-Net，但仍优于基线，这意味着攻击者对局部形状进行的大幅修改导致了一些局部形状在很大程度上消失，而SOR防御进一步破坏了关键的骨架信息。（但是我们的论文工作只存在C&amp;W类型的攻击，所以不会出现这样的负反馈现象）**对于C&amp;W簇和C&amp;W物体攻击，本文的DUP-Net防御将准确性提高到87.6%和68.4%；在SRS防御的情况下，准确性分别为92.0%和92.4%。这些结果进一步证明了我们强大的防御能力。</p>
+<p>总体而言，DUP-Net作为预处理网络有助于确保基于神经网络的分类的稳健性，并抵御来自对抗性点云的攻击。此外，DUP-Net是不可微分的，这使得攻击者难以实施二次对抗性攻击。</p>
+<hr>
+<h4 id="4-4-Visualization">4.4. Visualization</h4>
+<p><img src="7.png" alt=""></p>
+<p>如图所示是可视化结果，前四列为一组后三列为一组，后三列是抹除点的攻击，和我们工作无关，暂时不用考虑。</p>
+<hr>
+<h3 id="5-Conclusion">5. Conclusion</h3>
+<p>在这篇论文中，提出了一个由统计离群值去除（SOR）层和点云上采样网络（PU-Net）组成的去噪和上采样网络（DUP-Net），用于抵御3D点云对抗样本，提出使用点云恢复技术来净化受扰动的点云。作为初始步骤，应用SOR来抑制基于离群值的噪音模式，并制定一个难以绕过的不可微分层。方法的核心组件是上采样操作，它在增强点分辨率的同时消除了类似于图像超分辨率操作的对抗性模式。实验证明，仅使用点云上采样网络就足以恢复分类器对正确类别的判别能力；此外，统计离群值去除步骤提供了额外的鲁棒性，因为它是一个不可微分的去噪操作。</p>
+<hr>
 <p><a id="s1"></a></p>
 <h3 id="名词解释及问题">名词解释及问题</h3>
 <p><strong>重建表面平滑度</strong></p>
@@ -572,7 +647,23 @@
 <li>对异常值敏感： KNN对于异常值较为敏感，因为它的预测结果直接受到最近邻的影响。</li>
 <li>计算复杂度高： 随着训练集规模增大，KNN的计算复杂度也会增加，因为需要计算样本之间的距离。</li>
 </ul>
-<p>KNN在实际应用中常用于图像识别、手写数字识别、推荐系统等领域。选择合适的K值和距离度量方法是KNN应用中需要注意的关键因素。</p>
+<p>KNN在实际应用中常用于图像识别、手写数字识别、推荐系统等领域。选择合适的K值和距离度量方法是KNN应用中需要注意的关键因素。<a id="s4"></a></p>
+<hr>
+<p><strong>低维流形</strong></p>
+<p>低维流形是一个数学概念，用来描述在高维空间中的某个局部区域，数据的分布相对于整个高维空间而言具有较低的维度。直观上，我们可以将低维流形理解为数据在高维空间中弯曲、折叠或嵌入的结构，使得数据的自由度相对较少。</p>
+<p>举例来说，考虑一个三维空间的曲面，比如球面。尽管球面嵌套在三维空间中，但它实际上是一个二维的流形，因为在每一点上，表面上只需要两个自由度（例如，经度和纬度）来描述一个点的位置。这就是流形的低维性质：尽管嵌套在高维空间中，但在局部区域上，它的结构相对较简单。</p>
+<p>在机器学习和数据分析中，低维流形的概念被广泛用于理解高维数据的内在结构。许多真实世界的数据分布，特别是自然图像、语音信号等，通常在高维空间中有着较低维度的结构。这种低维结构可以使得对数据进行建模和分析更为有效。</p>
+<p>一些相关的观点和概念：</p>
+<ol>
+<li><strong>局部性质：</strong> 低维流形通常是局部性质的，即在空间中的小邻域内近似为低维。这使得在局部进行线性建模和分析成为可能。</li>
+<li><strong>流形假设：</strong> 机器学习中的流形假设指的是，真实数据分布通常集中在一个相对较小的低维流形上。这个假设是许多降维和特征学习方法的基础。</li>
+<li><strong>降维技术：</strong> 为了更好地理解和处理高维数据，降维技术被设计用来将数据映射到一个较低维的空间，同时保留尽可能多的信息。PCA（主成分分析）和t-SNE（t-distributed stochastic neighbor embedding）等算法就是基于低维流形概念的降维技术。</li>
+</ol>
+<p>总体而言，低维流形的概念提供了一种直观的方式来理解高维数据的结构，从而在机器学习和数据分析中发挥了重要作用。<a id="s5"></a></p>
+<hr>
+<p><strong>Chamfer距离</strong></p>
+<p>Chamfer距离是一种用于衡量两个点云之间相似性的距离度量。具体来说，给定两个点云，Chamfer距离通过计算每个点到另一个点云上最近的点之间的距离，并将这些距离进行求和来度量它们之间的相似性。</p>
+<p>Chamfer距离的目标是使两个点云之间的对应点距离尽可能小，以表达它们之间的相似性。这个距离度量在点云生成、点云匹配等任务中经常被用作损失函数，以引导模型生成具有更好结构的点云或找到两个点云之间的最佳对应。</p>
 
                 
             </div>
@@ -808,18 +899,17 @@
 <article id="prenext-posts" class="prev-next articles">
     <div class="row article-row">
         
-        <div class="article col s12 m6" data-aos="fade-up" data-aos="fade-up">
+        <div class="article col s12 m6" data-aos="fade-up">
             <div class="article-badge left-badge text-color">
-                <i class="far fa-dot-circle"></i>&nbsp;本篇
-            </div>
+                <i class="fas fa-chevron-left"></i>&nbsp;上一篇</div>
             <div class="card">
-                <a href="/2024/01/19/DUP-Net%E9%98%85%E8%AF%BB%E7%AC%94%E8%AE%B0/">
+                <a href="/2024/01/23/DUP-Net%E5%A4%8D%E7%8E%B0%E7%AC%94%E8%AE%B0/">
                     <div class="card-image">
                         
                         
-                        <img src="/medias/featureimages/9.jpg" class="responsive-img" alt="DUP-Net">
+                        <img src="/medias/featureimages/23.jpg" class="responsive-img" alt="Dup-net ICCV 2019 复现笔记">
                         
-                        <span class="card-title">DUP-Net</span>
+                        <span class="card-title">Dup-net ICCV 2019 复现笔记</span>
                     </div>
                 </a>
                 <div class="card-content article-content">
@@ -829,22 +919,21 @@
                         
                     </div>
                     <div class="publish-info">
-                            <span class="publish-date">
-                                <i class="far fa-clock fa-fw icon-date"></i>2024-01-19
-                            </span>
+                        <span class="publish-date">
+                            <i class="far fa-clock fa-fw icon-date"></i>2024-01-23
+                        </span>
                         <span class="publish-author">
                             
                             <i class="fas fa-bookmark fa-fw icon-category"></i>
                             
-                            <a href="/categories/%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB/" class="post-category">
-                                    论文阅读
+                            <a href="/categories/%E8%AE%BA%E6%96%87%E5%A4%8D%E7%8E%B0/" class="post-category">
+                                    论文复现
                                 </a>
                             
                             
                         </span>
                     </div>
                 </div>
-
                 
                 <div class="card-action article-tags">
                     
@@ -867,9 +956,9 @@
                     <div class="card-image">
                         
                         
-                        <img src="/medias/featureimages/23.jpg" class="responsive-img" alt="Cosmix TPAMI 2023">
+                        <img src="/medias/featureimages/1.jpg" class="responsive-img" alt="Cosmix TPAMI 2023 阅读笔记">
                         
-                        <span class="card-title">Cosmix TPAMI 2023</span>
+                        <span class="card-title">Cosmix TPAMI 2023 阅读笔记</span>
                     </div>
                 </a>
                 <div class="card-content article-content">
