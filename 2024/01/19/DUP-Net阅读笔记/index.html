@@ -484,6 +484,8 @@
                 <h3 id="写在前面的话">写在前面的话</h3>
 <p>将LaTeX表达式放在<code>$$</code>符号之间，并将所有的<code>\</code>转义为<code>\\</code>，也是写完本篇文章后发现的解决公式不能正常显示的一个途径。</p>
 <p>本文全称是——DUP-Net：用于 3D 对抗点云防御的降噪器和上采样器网络，在第一个工作中，我们准备借鉴本文的思想来作为我们的防御模块之一。</p>
+<p>文章链接：<a target="_blank" rel="noopener" href="https://openaccess.thecvf.com/content_ICCV_2019/html/Zhou_DUP-Net_Denoiser_and_Upsampler_Network_for_3D_Adversarial_Point_Clouds_ICCV_2019_paper.html">ICCV 2019 Open Access Repository (thecvf.com)</a></p>
+<hr>
 <h3 id="0-Abstract">0 Abstract</h3>
 <p>这段文字讨论了神经网络在3D点云分类中对抗性样本的脆弱性，并说明本文提出了一种名为Denoiser and UPsampler Network（DUP-Net）的防御结构。这两个模块通过删除或添加点来<a href="#s1">重建表面平滑度</a>，其中统计异常值去除（SOR）和数据驱动上采样网络分别被视为去噪器和上采样器。与基准防御相比，DUP-Net具有三个优势。首先，采用DUP-Net作为防御手段，目标模型对<strong>白盒对抗性攻击</strong>更加鲁棒。其次，统计异常值去除提供额外的鲁棒性，因为它是一个<a href="#s2">非可微的去噪操作</a>。第三，上采样网络可以在小型数据集上训练，并且对来自其他点云数据集生成的对抗性攻击具有良好的防御能力。本文进行了各种实验证明DUP-Net在实践中作为防御手段非常有效。最佳防御措施在200个删除点的情况下，消除了83.8%的C&amp;W和l2损失攻击（点移位），50.0%的C&amp;W和Hausdorff距离损失攻击（点添加）以及9.0%的显著性图损失攻击（点删除）在PointNet上。</p>
 <hr>
@@ -903,13 +905,13 @@
             <div class="article-badge left-badge text-color">
                 <i class="fas fa-chevron-left"></i>&nbsp;上一篇</div>
             <div class="card">
-                <a href="/2024/01/23/DUP-Net%E5%A4%8D%E7%8E%B0%E7%AC%94%E8%AE%B0/">
+                <a href="/2024/01/24/IF-Defense%E9%98%85%E8%AF%BB%E7%AC%94%E8%AE%B0/">
                     <div class="card-image">
                         
                         
-                        <img src="/medias/featureimages/23.jpg" class="responsive-img" alt="Dup-net ICCV 2019 复现笔记">
+                        <img src="/medias/featureimages/18.jpg" class="responsive-img" alt="IF-Defense 2020 阅读笔记">
                         
-                        <span class="card-title">Dup-net ICCV 2019 复现笔记</span>
+                        <span class="card-title">IF-Defense 2020 阅读笔记</span>
                     </div>
                 </a>
                 <div class="card-content article-content">
@@ -920,14 +922,14 @@
                     </div>
                     <div class="publish-info">
                         <span class="publish-date">
-                            <i class="far fa-clock fa-fw icon-date"></i>2024-01-23
+                            <i class="far fa-clock fa-fw icon-date"></i>2024-01-24
                         </span>
                         <span class="publish-author">
                             
                             <i class="fas fa-bookmark fa-fw icon-category"></i>
                             
-                            <a href="/categories/%E8%AE%BA%E6%96%87%E5%A4%8D%E7%8E%B0/" class="post-category">
-                                    论文复现
+                            <a href="/categories/%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB/" class="post-category">
+                                    论文阅读
                                 </a>
                             
                             
