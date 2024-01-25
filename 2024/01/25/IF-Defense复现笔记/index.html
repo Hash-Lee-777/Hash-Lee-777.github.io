@@ -469,14 +469,14 @@
                 
                 <div class="info-break-policy">
                     <i class="far fa-file-word fa-fw"></i>文章字数:&nbsp;&nbsp;
-                    1.1k
+                    1.4k
                 </div>
                 
 
                 
                 <div class="info-break-policy">
                     <i class="far fa-clock fa-fw"></i>阅读时长:&nbsp;&nbsp;
-                    4 分
+                    5 分
                 </div>
                 
 
@@ -546,6 +546,36 @@ conda activate IF-Defense<span aria-hidden="true" class="line-numbers-rows"><spa
 <li><code>onet_remesh/onet_opt/convonet_opt-MN40_random_2048.npz</code> 是使用 IF-Defense 的三种变体从 <code>MN40_random_2048.npz</code> 中得到的防御数据。它们用于受害者模型的混合训练（见下文和论文的附录获取更多细节）</li>
 </ul>
 <hr>
+<h3 id="预训练的受害者模型">预训练的受害者模型</h3>
+<p>论文仓库提供了用于实验中的受害者模型的预训练权重。从<a target="_blank" rel="noopener" href="https://drive.google.com/file/d/1n9bRWyjPWSMyQktodCP2fnKpmzDFEf3e/view?usp=sharing">这里</a>下载并解压缩到 <code>pretrain/</code> 目录下。也可以自己训练受害者模型，并将其放入该文件夹：</p>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token function">scp</span> <span class="token parameter variable">-r</span> <span class="token parameter variable">-P</span> <span class="token number">18188</span> C:<span class="token punctuation">\</span>Users<span class="token punctuation">\</span>Lee<span class="token punctuation">\</span>Downloads<span class="token punctuation">\</span>pretrain.tar.gz sdim-lihc@172.18.6.10:/work/sdim-lihc/3D_UDA/3D_UDA/IF-Defense/IF-Defense-main/baselines/pretrain
+<span class="token function">tar</span> <span class="token parameter variable">-xzvf</span> pretrain.tar.gz<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
+<p><strong>注意</strong>，如果想使用自己的模型/权重，须修改 <code>config.py</code> 中名为 ‘BEST_WEIGHTS’ 的变量。</p>
+<hr>
+<h2 id="使用方法">使用方法</h2>
+<h3 id="训练受害者模型">训练受害者模型</h3>
+<p>仓库提供了四种类型的受害者模型，<strong>PointNet、PointNet++、DGCNN 和 PointConv</strong>，其中 PointNet++ 和 PointConv 使用了 单尺度分组（SSG）。</p>
+<h4 id="在干净数据上训练">在干净数据上训练</h4>
+<p>在随机采样的 ModelNet40 数据集上训练 pointnet 模型：（我用的是学校的 lsf 作业调度平台，不同平台脚本的撰写方式可能有所不同）</p>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token shebang important">#!/bin/bash</span>
+<span class="token comment">#BSUB -q 4a100-80 </span>
+<span class="token comment">#BSUB -n 1</span>
+<span class="token comment">#BSUB -e train_victim_pointnet.err</span>
+<span class="token comment">#BSUB -o train_victim_pointnet.log</span>
+<span class="token comment">#BSUB -W 20:00</span>
+<span class="token comment">#BSUB -R "span[ptile=1]"</span>
+<span class="token comment">#BSUB -gpu "num=1/host"</span>
+<span class="token builtin class-name">export</span> <span class="token assign-left variable">CUDA_VISIBLE_DEVICES</span><span class="token operator">=</span><span class="token number">0</span>
+
+<span class="token builtin class-name">echo</span> <span class="token string">"the log information of train_victim_pointnet.py"</span> <span class="token operator">>></span> train_victim_pointnet.log
+<span class="token function">date</span> <span class="token operator">>></span> train_victim_pointnet.log
+module load python/anaconda3/2022.10
+module load cuda/11.8
+<span class="token builtin class-name">source</span> activate
+<span class="token comment"># conda init bash</span>
+conda activate IF-Defense
+<span class="token builtin class-name">cd</span> /work/sdim-lihc/3D_UDA/3D_UDA/IF-Defense/IF-Defense-main/baselines
+python train.py <span class="token parameter variable">--model</span><span class="token operator">=</span>pointnet <span class="token parameter variable">--num_points</span><span class="token operator">=</span><span class="token number">1024</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
 <hr>
 <h2 id="名词解释及问题-a-id-s1-a">名词解释及问题<a id="s1"></a></h2>
 <p><strong>Numpy npz文件</strong></p>
@@ -1354,7 +1384,7 @@ code[class*="language-"], pre[class*="language-"] { white-space: pre !important;
             <br>
             
             &nbsp;<i class="fas fa-chart-area"></i>&nbsp;站点总字数:&nbsp;<span
-                class="white-color">24k</span>&nbsp;字
+                class="white-color">24.3k</span>&nbsp;字
             
             
             
