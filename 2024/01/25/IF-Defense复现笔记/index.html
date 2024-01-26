@@ -469,14 +469,14 @@
                 
                 <div class="info-break-policy">
                     <i class="far fa-file-word fa-fw"></i>文章字数:&nbsp;&nbsp;
-                    1.4k
+                    2.1k
                 </div>
                 
 
                 
                 <div class="info-break-policy">
                     <i class="far fa-clock fa-fw"></i>阅读时长:&nbsp;&nbsp;
-                    5 分
+                    8 分
                 </div>
                 
 
@@ -506,7 +506,7 @@
 conda activate IF-Defense<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
 <p>用pip把所有需要的包装上：</p>
 <pre class="line-numbers language-bash" data-language="bash"><code class="language-bash">python <span class="token parameter variable">-m</span> pip <span class="token function">install</span> <span class="token parameter variable">-r</span> requirements.txt<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
-<p>注意阅读 requirements.txt 里面被注释的部分，是需要自己安装的包，需要根据自己cuda的版本来进行安装。我的cuda版本是cuda11.8，去 pytorch 官网以及对应包的仓库下载对应版本的包即可。（pytorch 建议使用清华源进行安装，使用官网链接有时候慢的离谱）</p>
+<p>注意阅读 <code>requirements.txt</code> 里面被注释的部分，是需要自己安装的包，需要根据自己<code>cuda</code>的版本来进行安装。我的<code>cuda</code>版本是<code>cuda11.8</code>，去 <code>pytorch</code> 官网以及对应包的仓库下载对应版本的包即可。（<code>pytorch</code> 建议使用清华源进行安装，使用官网链接有时候慢的离谱）</p>
 <p>清华源链接：<a target="_blank" rel="noopener" href="https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/pytorch/">Index of /anaconda/cloud/pytorch/ | 清华大学开源软件镜像站 | Tsinghua Open Source Mirror</a></p>
 <p><a target="_blank" rel="noopener" href="https://pytorch.org/">PyTorch</a></p>
 <p><img src="1.png" alt=""></p>
@@ -515,48 +515,48 @@ conda activate IF-Defense<span aria-hidden="true" class="line-numbers-rows"><spa
 <p>在装依赖的时候可能遇到一系列的问题，直接复制粘贴报错到谷歌或 gpt 即可，没有很难解决的报错。</p>
 <hr>
 <h2 id="项目结构">项目结构</h2>
-<p>这个项目中的代码主要分为三个文件夹，每个文件夹都有一个详细的 README 文件，解释其用法。这里简要概述这个存储库的结构。</p>
+<p>这个项目中的代码主要分为三个文件夹，每个文件夹都有一个详细的 <code>README</code> 文件，解释其用法。这里简要概述这个存储库的结构。</p>
 <ul>
-<li><strong>baselines/</strong> 包含用于训练/测试受害者模型以及一些基线攻击和防御方法的代码。</li>
-<li><strong>ONet/</strong> 实现了 IF-Defense 的两个变体，ONet-Mesh 和 ONet-Opt。</li>
-<li><strong>ConvONet/</strong> 是 IF-Defense 的另一个变体（在大多数情况下也是最强大的），ConvONet-Opt。</li>
+<li><strong><code>baselines/</code></strong> 包含用于训练/测试受害者模型以及一些基线攻击和防御方法的代码。</li>
+<li><strong><code>ONet/</code></strong> 实现了 <code>IF-Defense</code> 的两个变体，<code>ONet-Mesh</code> 和 <code>ONet-Opt</code>。</li>
+<li><strong><code>ConvONet/</code></strong> 是 <code>IF-Defense</code> 的另一个变体（在大多数情况下也是最强大的），<code>ConvONet-Opt</code>。</li>
 </ul>
 <p>可以进入每个文件夹查看代码的详细用法，下面将详细阐述各部分代码结构和用法。</p>
 <hr>
 <h2 id="baselines">baselines</h2>
 <p>这个文件夹包含了一些用于研究点云中的三维对抗攻击和防御的基本文件。作者实现了受害者模型的训练和测试，以及几种<strong>基线</strong>攻击和防御方法。这个代码库高度可扩展，我们可以根据需要轻松地添加更多的受害者模型架构、攻击和防御方法。</p>
 <h3 id="数据存储">数据存储</h3>
-<p>为了简化数据加载的过程，作者将所有的数据（例如，点云、Ground Truth 标签、目标标签）都转换成了一个 <a href="#s1">Numpy npz</a> 文件。例如，对于 ModelNet40 npz 文件 <code>data/MN40_random_2048.npz</code>，它包含以下数据：</p>
+<p>为了简化数据加载的过程，作者将所有的数据（例如，点云、<code>Ground Truth</code> 标签、目标标签）都转换成了一个 <a href="#s1">Numpy npz</a> 文件。例如，对于 <code>ModelNet40 npz</code> 文件 <code>data/MN40_random_2048.npz</code>，它包含以下数据：</p>
 <ul>
-<li><strong>train/test_pc</strong>：用于训练和测试的点云，形状为 [num_data, num_points, 3]。</li>
-<li><strong>train/test_label</strong>：训练和测试数据的地面真实标签。</li>
-<li><strong>target_label</strong>：用于有针对性攻击的预先指定目标标签。</li>
+<li><strong><code>train/test_pc</code></strong>：用于训练和测试的点云，形状为 [num_data, num_points, 3]。</li>
+<li><strong><code>train/test_label</code></strong>：训练和测试数据的地面真实标签。</li>
+<li><strong><code>target_label</code></strong>：用于有针对性攻击的预先指定目标标签。</li>
 </ul>
 <hr>
 <h3 id="数据准备">数据准备</h3>
-<p>从<a target="_blank" rel="noopener" href="https://drive.google.com/file/d/1o47ZvVcNvwBGv55xibEFw6KAOLaRF1IF/view?usp=sharing">这里</a>下载用于训练、测试和攻击的点云数据—— wget 命令后跟下载链接即可。若出现错误也可以先下载到本地然后再使用 scp 命令传输。（注意每个人下载链接不同需要替换），然后解压缩到 <code>data/</code> 目录下。</p>
+<p>从<a target="_blank" rel="noopener" href="https://drive.google.com/file/d/1o47ZvVcNvwBGv55xibEFw6KAOLaRF1IF/view?usp=sharing">这里</a>下载用于训练、测试和攻击的点云数据—— <code>wget</code> 命令后跟下载链接即可。若出现错误也可以先下载到本地然后再使用 <code>scp</code> 命令传输。（注意每个人下载链接不同需要替换），然后解压缩到 <code>data/</code> 目录下。</p>
 <pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token function">wget</span> https://drive.usercontent.google.com/download?id<span class="token operator">=</span>1o47ZvVcNvwBGv55xibEFw6KAOLaRF1IF 
 <span class="token function">scp</span> <span class="token parameter variable">-r</span> <span class="token parameter variable">-P</span> <span class="token number">18188</span> C:<span class="token punctuation">\</span>Users<span class="token punctuation">\</span>Lee<span class="token punctuation">\</span>Downloads<span class="token punctuation">\</span>data.tar.gz sdim-lihc@172.18.6.10:/work/sdim-lihc/3D_UDA/3D_UDA/IF-Defense/IF-Defense-main/baselines/data
 <span class="token function">tar</span> <span class="token parameter variable">-xzvf</span> data.tar.gz<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre>
 <p>经过一番操作后，<code>data/</code>下的目录结构应该是这样的：</p>
 <p><img src="3.png" alt=""></p>
 <ul>
-<li><code>MN40_random_2048.npz</code> 是随机采样的 ModelNet40 数据，每个点云有 2048 个点。</li>
+<li><code>MN40_random_2048.npz</code> 是随机采样的 <code>ModelNet40</code> 数据，每个点云有 2048 个点。</li>
 <li><code>attack_data.npz</code> 是所有攻击中使用的数据，其中仅包含测试数据，每个点云有 1024 个点，预先指定的目标标签也在其中。</li>
-<li><code>onet_remesh/onet_opt/convonet_opt-MN40_random_2048.npz</code> 是使用 IF-Defense 的三种变体从 <code>MN40_random_2048.npz</code> 中得到的防御数据。它们用于受害者模型的混合训练（见下文和论文的附录获取更多细节）</li>
+<li><code>onet_remesh/onet_opt/convonet_opt-MN40_random_2048.npz</code> 是使用 <code>IF-Defense</code> 的三种变体从 <code>MN40_random_2048.npz</code> 中得到的防御数据。它们用于受害者模型的混合训练（见下文和论文的附录获取更多细节）</li>
 </ul>
 <hr>
 <h3 id="预训练的受害者模型">预训练的受害者模型</h3>
 <p>论文仓库提供了用于实验中的受害者模型的预训练权重。从<a target="_blank" rel="noopener" href="https://drive.google.com/file/d/1n9bRWyjPWSMyQktodCP2fnKpmzDFEf3e/view?usp=sharing">这里</a>下载并解压缩到 <code>pretrain/</code> 目录下。也可以自己训练受害者模型，并将其放入该文件夹：</p>
 <pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token function">scp</span> <span class="token parameter variable">-r</span> <span class="token parameter variable">-P</span> <span class="token number">18188</span> C:<span class="token punctuation">\</span>Users<span class="token punctuation">\</span>Lee<span class="token punctuation">\</span>Downloads<span class="token punctuation">\</span>pretrain.tar.gz sdim-lihc@172.18.6.10:/work/sdim-lihc/3D_UDA/3D_UDA/IF-Defense/IF-Defense-main/baselines/pretrain
 <span class="token function">tar</span> <span class="token parameter variable">-xzvf</span> pretrain.tar.gz<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
-<p><strong>注意</strong>，如果想使用自己的模型/权重，须修改 <code>config.py</code> 中名为 ‘BEST_WEIGHTS’ 的变量。</p>
+<p><strong>注意</strong>，如果想使用自己的模型/权重，须修改 <code>config.py</code> 中名为 <code>'BEST_WEIGHTS'</code> 的变量。</p>
 <hr>
 <h2 id="使用方法">使用方法</h2>
 <h3 id="训练受害者模型">训练受害者模型</h3>
-<p>仓库提供了四种类型的受害者模型，<strong>PointNet、PointNet++、DGCNN 和 PointConv</strong>，其中 PointNet++ 和 PointConv 使用了 单尺度分组（SSG）。</p>
+<p>仓库提供了四种类型的受害者模型，<strong><code>PointNet、PointNet++、DGCNN</code></strong> 和 <strong><code>PointConv</code></strong>，其中 <code>PointNet++</code> 和 <code>PointConv</code> 使用了 单尺度分组（<code>SSG</code>）。</p>
 <h4 id="在干净数据上训练">在干净数据上训练</h4>
-<p>在随机采样的 ModelNet40 数据集上训练 pointnet 模型：（我用的是学校的 lsf 作业调度平台，不同平台脚本的撰写方式可能有所不同）</p>
+<p>在随机采样的 <code>ModelNet40</code> 数据集上训练 <code>Pointnet </code>模型：（我用的是学校的 <code>lsf</code> 作业调度平台，不同平台脚本的撰写方式可能有所不同）</p>
 <pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token shebang important">#!/bin/bash</span>
 <span class="token comment">#BSUB -q 4a100-80 </span>
 <span class="token comment">#BSUB -n 1</span>
@@ -576,10 +576,44 @@ module load cuda/11.8
 conda activate IF-Defense
 <span class="token builtin class-name">cd</span> /work/sdim-lihc/3D_UDA/3D_UDA/IF-Defense/IF-Defense-main/baselines
 python train.py <span class="token parameter variable">--model</span><span class="token operator">=</span>pointnet <span class="token parameter variable">--num_points</span><span class="token operator">=</span><span class="token number">1024</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>这将使用Adam优化器对模型进行200个<code>epochs</code>的训练，学习率从<code>1e-3</code>开始，并使用余弦衰减到<code>1e-5</code>。</p>
+<p>提供的预训练权重使用此命令的准确度略低于论文中报告的准确度。这是因为没有使用任何技巧（例如，在<a target="_blank" rel="noopener" href="https://github.com/WangYueFt/dgcnn/blob/master/tensorflow/models/dgcnn.py#L105">DGCNN</a>的官方<code>TensorFlow</code>实现中使用标签平滑），并且是在随机抽样的点云上进行训练/测试，而一些官方实现是在最远点采样（<code>FPS</code>）抽样的点云上进行训练/测试。</p>
+<hr>
+<h4 id="混合训练">混合训练</h4>
+<p>纯粹在干净数据上训练的受害者模型在<code>IF-Defense</code>防御数据上的准确度降低了最多5%，这对于一种防御来说是不可接受的。因此，这里将防御数据添加为简单的数据增强，以实现可忽略的性能降低：</p>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token assign-left variable">CUDA_VISIBLE_DEVICES</span><span class="token operator">=</span><span class="token number">0</span> python hybrid_train.py <span class="token parameter variable">--model</span><span class="token operator">=</span><span class="token punctuation">&#123;</span><span class="token variable">$MODEL</span><span class="token punctuation">&#125;</span> <span class="token parameter variable">--num_points</span><span class="token operator">=</span><span class="token number">1024</span> <span class="token parameter variable">--dataset</span><span class="token operator">=</span><span class="token punctuation">&#123;</span><span class="token variable">$DATASET</span><span class="token punctuation">&#125;</span> <span class="token parameter variable">--def_data</span><span class="token operator">=</span>path/to/defense_data.npz<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>可以参考论文的附录以获取有关混合训练的更多详细信息。有关参数<code>&#123;$DATASET&#125;</code>的用法，参阅<code>command.txt</code>。</p>
+<p>寻找文件位置（具体路径需要根据自己的文件位置确定）：</p>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token function">find</span> /work/sdim-lihc/3D_UDA/3D_UDA/IF-Defense/IF-Defense-main <span class="token parameter variable">-name</span> <span class="token string">"command.txt"</span><span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>对于三个<code>command.txt</code>的剖析，见本笔记的最后一个部分。</p>
+<hr>
+<h3 id="攻击">攻击</h3>
+<p>本文实现了<strong>扰动</strong>、<strong>添加点</strong>、<strong>添加聚类</strong>、**添加对象、<code>kNN</code><strong>以及变种的</strong><code>FGM</code>和<code>Drop</code>**攻击。攻击脚本位于<code>attack_scripts/</code>文件夹中。除了Drop方法无法有针对性地攻击受害模型之外，都可以根据预先分配的固定目标标签执行有针对性的攻击。</p>
+<p>攻击非常耗时（例如，在扰动方法中进行10步的二分搜索），因此可以使用<code>PyTorch</code>中的<code>DistributedDataParallel</code>提供的多<code>GPU</code>支持来加速这一过程。有关每种攻击方法的详细使用方法，仍然可以参阅<code>command.txt</code>。</p>
+<hr>
+<h3 id="防御">防御</h3>
+<p>论文中实现了**<code>SRS</code>、<code>SOR</code>和<code>DUP-Net</code>**防御。要应用一种防御，只需运行以下命令（本地）：</p>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token assign-left variable">CUDA_VISIBLE_DEVICES</span><span class="token operator">=</span><span class="token number">0</span> python defend_npz.py <span class="token parameter variable">--data_root</span><span class="token operator">=</span>path/to/adv_data.npz <span class="token parameter variable">--defense</span><span class="token operator">=</span>srs/sor/dup/<span class="token string">''</span><span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p><code>lsf</code> 作业集群中，脚本代码如下：</p>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash">~~~
+
+防御结果仍然会保存为一个<span class="token variable"><span class="token variable">`</span>NumPy npz<span class="token variable">`</span></span>文件，保存在与<span class="token variable"><span class="token variable">`</span>adv_data<span class="token variable">`</span></span>相同的目录中。
+
+---
+
+使用 <span class="token variable"><span class="token variable">`</span>inference.py<span class="token variable">`</span></span> 测试攻击/防御的性能：
+
+~~~shell
+<span class="token assign-left variable">CUDA_VISIBLE_DEVICES</span><span class="token operator">=</span><span class="token number">0</span> python inference.py <span class="token parameter variable">--num_points</span><span class="token operator">=</span><span class="token number">1024</span> <span class="token parameter variable">--mode</span><span class="token operator">=</span>normal/target <span class="token parameter variable">--model</span><span class="token operator">=</span><span class="token punctuation">&#123;</span><span class="token variable">$MODEL</span><span class="token punctuation">&#125;</span> <span class="token parameter variable">--normalize_pc</span><span class="token operator">=</span>True/False <span class="token parameter variable">--dataset</span><span class="token operator">=</span><span class="token punctuation">&#123;</span><span class="token variable">$DATASET</span><span class="token punctuation">&#125;</span> <span class="token parameter variable">--data_root</span><span class="token operator">=</span>path/to/test_data.npz<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>lsf 作业集群中，脚本代码如下：</p>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>参考 <code>command.txt</code> 获取有关不同参数的详细信息。</p>
 <hr>
 <h2 id="名词解释及问题-a-id-s1-a">名词解释及问题<a id="s1"></a></h2>
-<p><strong>Numpy npz文件</strong></p>
-<p>Numpy npz文件是指 NumPy 的压缩文件格式。NumPy 是 Python 中用于科学计算的一个库，它提供了多维数组对象以及用于处理这些数组的函数。npz 文件是 NumPy中 用于保存多个 NumPy 数组的压缩文件格式，通常用于存储多个相关的数据数组。在这个项目中，npz 文件被用来存储点云数据、Ground Truth标签等信息，以便于加载和处理。</p>
+<h3 id="Numpy-npz-文件"><strong>Numpy npz</strong> <strong>文件</strong></h3>
+<p><code>Numpy npz</code>文件是指 <code>NumPy</code> 的压缩文件格式。<code>NumPy</code> 是 <code>Python</code> 中用于科学计算的一个库，它提供了多维数组对象以及用于处理这些数组的函数。<code>npz</code> 文件是 <code>NumPy</code>中 用于保存多个 <code>NumPy</code>数组的压缩文件格式，通常用于存储多个相关的数据数组。在这个项目中，<code>npz</code> 文件被用来存储点云数据、<code>Ground Truth</code>标签等信息，以便于加载和处理。</p>
+<hr>
+<h3 id="关于-baseline-中的-command-txt-的剖析">关于 baseline 中的 command.txt 的剖析</h3>
 
                 
             </div>
@@ -1384,7 +1418,7 @@ code[class*="language-"], pre[class*="language-"] { white-space: pre !important;
             <br>
             
             &nbsp;<i class="fas fa-chart-area"></i>&nbsp;站点总字数:&nbsp;<span
-                class="white-color">24.3k</span>&nbsp;字
+                class="white-color">25k</span>&nbsp;字
             
             
             
