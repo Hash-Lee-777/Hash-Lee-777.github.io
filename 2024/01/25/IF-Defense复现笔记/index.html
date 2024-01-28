@@ -469,14 +469,14 @@
                 
                 <div class="info-break-policy">
                     <i class="far fa-file-word fa-fw"></i>文章字数:&nbsp;&nbsp;
-                    2.1k
+                    5.2k
                 </div>
                 
 
                 
                 <div class="info-break-policy">
                     <i class="far fa-clock fa-fw"></i>阅读时长:&nbsp;&nbsp;
-                    8 分
+                    22 分
                 </div>
                 
 
@@ -546,74 +546,297 @@ conda activate IF-Defense<span aria-hidden="true" class="line-numbers-rows"><spa
 <li><code>onet_remesh/onet_opt/convonet_opt-MN40_random_2048.npz</code> 是使用 <code>IF-Defense</code> 的三种变体从 <code>MN40_random_2048.npz</code> 中得到的防御数据。它们用于受害者模型的混合训练（见下文和论文的附录获取更多细节）</li>
 </ul>
 <hr>
-<h3 id="预训练的受害者模型">预训练的受害者模型</h3>
-<p>论文仓库提供了用于实验中的受害者模型的预训练权重。从<a target="_blank" rel="noopener" href="https://drive.google.com/file/d/1n9bRWyjPWSMyQktodCP2fnKpmzDFEf3e/view?usp=sharing">这里</a>下载并解压缩到 <code>pretrain/</code> 目录下。也可以自己训练受害者模型，并将其放入该文件夹：</p>
+<h3 id="预训练的受害者模型pretrain-目录下。也可以自己训练受害者模型，并将其放入该文件夹：">预训练的受害者模型<code>pretrain/</code> 目录下。也可以自己训练受害者模型，并将其放入该文件夹：</h3>
 <pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token function">scp</span> <span class="token parameter variable">-r</span> <span class="token parameter variable">-P</span> <span class="token number">18188</span> C:<span class="token punctuation">\</span>Users<span class="token punctuation">\</span>Lee<span class="token punctuation">\</span>Downloads<span class="token punctuation">\</span>pretrain.tar.gz sdim-lihc@172.18.6.10:/work/sdim-lihc/3D_UDA/3D_UDA/IF-Defense/IF-Defense-main/baselines/pretrain
 <span class="token function">tar</span> <span class="token parameter variable">-xzvf</span> pretrain.tar.gz<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
 <p><strong>注意</strong>，如果想使用自己的模型/权重，须修改 <code>config.py</code> 中名为 <code>'BEST_WEIGHTS'</code> 的变量。</p>
 <hr>
 <h2 id="使用方法">使用方法</h2>
 <h3 id="训练受害者模型">训练受害者模型</h3>
-<p>仓库提供了四种类型的受害者模型，<strong><code>PointNet、PointNet++、DGCNN</code></strong> 和 <strong><code>PointConv</code></strong>，其中 <code>PointNet++</code> 和 <code>PointConv</code> 使用了 单尺度分组（<code>SSG</code>）。</p>
+<p>仓库提供了四种类型的受害者模型，<code>PointNet、PointNet++、DGCNN</code> 和 <code>PointConv</code>，其中 <code>PointNet++</code> 和 <code>PointConv</code> 使用了 单尺度分组（<code>SSG</code>）。</p>
 <h4 id="在干净数据上训练">在干净数据上训练</h4>
 <p>在随机采样的 <code>ModelNet40</code> 数据集上训练 <code>Pointnet </code>模型：（我用的是学校的 <code>lsf</code> 作业调度平台，不同平台脚本的撰写方式可能有所不同）</p>
-<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token shebang important">#!/bin/bash</span>
-<span class="token comment">#BSUB -q 4a100-80 </span>
-<span class="token comment">#BSUB -n 1</span>
-<span class="token comment">#BSUB -e train_victim_pointnet.err</span>
-<span class="token comment">#BSUB -o train_victim_pointnet.log</span>
-<span class="token comment">#BSUB -W 20:00</span>
-<span class="token comment">#BSUB -R "span[ptile=1]"</span>
-<span class="token comment">#BSUB -gpu "num=1/host"</span>
-<span class="token builtin class-name">export</span> <span class="token assign-left variable">CUDA_VISIBLE_DEVICES</span><span class="token operator">=</span><span class="token number">0</span>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token shebang important">#!/bin/bash //指定脚本的解释器为 bash</span>
+<span class="token comment">#BSUB -q 4a100-80 //指定作业所在队列的名称为 4a100-80</span>
+<span class="token comment">#BSUB -n 1 //指定作业需要的CPU核心数为1。</span>
+<span class="token comment">#BSUB -e train_victim_pointnet.err // 指定标准错误输出的文件名为 train_victim_pointnet.err</span>
+<span class="token comment">#BSUB -o train_victim_pointnet.log // 指定标准输出的文件名为 train_victim_pointnet.log</span>
+<span class="token comment">#BSUB -W 20:00 //指定作业的最大运行时间为20小时</span>
+<span class="token comment">#BSUB -R "span[ptile=1]" //指定每个节点上的作业只使用一个处理器（即一个 CPU 核心）</span>
+<span class="token comment">#BSUB -gpu "num=1/host" //指定作业需要使用的 GPU 数量为1，且只能在一个节点上运行</span>
+<span class="token builtin class-name">export</span> <span class="token assign-left variable">CUDA_VISIBLE_DEVICES</span><span class="token operator">=</span><span class="token number">0</span> //设置环境变量 CUDA_VISIBLE_DEVICES 为0，这会将第一个 GPU 分配给该作业
 
-<span class="token builtin class-name">echo</span> <span class="token string">"the log information of train_victim_pointnet.py"</span> <span class="token operator">>></span> train_victim_pointnet.log
-<span class="token function">date</span> <span class="token operator">>></span> train_victim_pointnet.log
+<span class="token comment">#将一行文本写入到 train_victim_pointnet.log 文件中，用于标识日志的开始。</span>
+<span class="token builtin class-name">echo</span> <span class="token string">"the log information of train_victim_pointnet.py"</span> <span class="token operator">>></span> train_victim_pointnet.log 
+<span class="token function">date</span> <span class="token operator">>></span> train_victim_pointnet.log 
 module load python/anaconda3/2022.10
 module load cuda/11.8
 <span class="token builtin class-name">source</span> activate
 <span class="token comment"># conda init bash</span>
 conda activate IF-Defense
 <span class="token builtin class-name">cd</span> /work/sdim-lihc/3D_UDA/3D_UDA/IF-Defense/IF-Defense-main/baselines
-python train.py <span class="token parameter variable">--model</span><span class="token operator">=</span>pointnet <span class="token parameter variable">--num_points</span><span class="token operator">=</span><span class="token number">1024</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+python train.py <span class="token parameter variable">--model</span><span class="token operator">=</span>pointnet <span class="token parameter variable">--num_points</span><span class="token operator">=</span><span class="token number">1024</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
 <p>这将使用Adam优化器对模型进行200个<code>epochs</code>的训练，学习率从<code>1e-3</code>开始，并使用余弦衰减到<code>1e-5</code>。</p>
 <p>提供的预训练权重使用此命令的准确度略低于论文中报告的准确度。这是因为没有使用任何技巧（例如，在<a target="_blank" rel="noopener" href="https://github.com/WangYueFt/dgcnn/blob/master/tensorflow/models/dgcnn.py#L105">DGCNN</a>的官方<code>TensorFlow</code>实现中使用标签平滑），并且是在随机抽样的点云上进行训练/测试，而一些官方实现是在最远点采样（<code>FPS</code>）抽样的点云上进行训练/测试。</p>
+<p>结束后，可以在脚本中指定路径看到<code>log</code>，里面详细记录了每一次训练的学习率，各类损失，训练准确率和测试准确率。总共训练了200个<code>epoch</code>，每个<code>epoch</code>300步，且在第191个<code>epoch</code>时达到最高准确率0.8841，如图所示。</p>
+<p><img src="4.png" alt=""></p>
+<p>然后我们可以通过如下命令，寻找各次训练保存的模型和参数，在输出的路径中可以找到最佳的model的参数。</p>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token function">find</span> /work/sdim-lihc/3D_UDA/3D_UDA/IF-Defense/IF-Defense-main <span class="token parameter variable">-type</span> f <span class="token parameter variable">-name</span> <span class="token string">"*.pth"</span><span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>我这里的是<code>model191_acc_0.8841_loss_0.0859_lr_0.000017.pth</code>。在之后攻击脚本的<code>model</code>中就可以指定它为对应的模型。</p>
 <hr>
 <h4 id="混合训练">混合训练</h4>
-<p>纯粹在干净数据上训练的受害者模型在<code>IF-Defense</code>防御数据上的准确度降低了最多5%，这对于一种防御来说是不可接受的。因此，这里将防御数据添加为简单的数据增强，以实现可忽略的性能降低：</p>
+<p>纯粹在干净数据上训练的受害者模型在<code>IF-Defense</code>防御数据上的准确度降低了最多5%（即执行<code>train.py</code>且指定<code>dataset</code>为防御数据），这对于一种防御来说是不可接受的。因此，这里将防御数据添加为简单的数据增强，以实现可忽略的性能降低：</p>
 <pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token assign-left variable">CUDA_VISIBLE_DEVICES</span><span class="token operator">=</span><span class="token number">0</span> python hybrid_train.py <span class="token parameter variable">--model</span><span class="token operator">=</span><span class="token punctuation">&#123;</span><span class="token variable">$MODEL</span><span class="token punctuation">&#125;</span> <span class="token parameter variable">--num_points</span><span class="token operator">=</span><span class="token number">1024</span> <span class="token parameter variable">--dataset</span><span class="token operator">=</span><span class="token punctuation">&#123;</span><span class="token variable">$DATASET</span><span class="token punctuation">&#125;</span> <span class="token parameter variable">--def_data</span><span class="token operator">=</span>path/to/defense_data.npz<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
 <p>可以参考论文的附录以获取有关混合训练的更多详细信息。有关参数<code>&#123;$DATASET&#125;</code>的用法，参阅<code>command.txt</code>。</p>
 <p>寻找文件位置（具体路径需要根据自己的文件位置确定）：</p>
 <pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token function">find</span> /work/sdim-lihc/3D_UDA/3D_UDA/IF-Defense/IF-Defense-main <span class="token parameter variable">-name</span> <span class="token string">"command.txt"</span><span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
 <p>对于三个<code>command.txt</code>的剖析，见本笔记的最后一个部分。</p>
+<p>我编写的<code>lsf</code>脚本如下：</p>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token shebang important">#!/bin/bash</span>
+<span class="token comment">#BSUB -q 4a100-80</span>
+<span class="token comment">#BSUB -n 1</span>
+<span class="token comment">#BSUB -e hybrid_train_victim_pointnet_conv_opt.err</span>
+<span class="token comment">#BSUB -o hybrid_train_victim_pointnet_conv_opt.log</span>
+<span class="token comment">#BSUB -W 20:00</span>
+<span class="token comment">#BSUB -R "span[ptile=1]"</span>
+<span class="token comment">#BSUB -gpu "num=1/host"</span>
+<span class="token builtin class-name">export</span> <span class="token assign-left variable">CUDA_VISIBLE_DEVICES</span><span class="token operator">=</span><span class="token number">0</span>
+
+<span class="token builtin class-name">echo</span> <span class="token string">"the log information of hybrid_train.py"</span> <span class="token operator">>></span> hybrid_train_victim_pointnet_conv_opt.log
+<span class="token function">date</span> <span class="token operator">>></span> hybrid_train_victim_pointnet_conv_opt.log
+module load python/anaconda3/2022.10
+module load cuda/11.8
+<span class="token builtin class-name">source</span> activate
+<span class="token comment"># conda init bash</span>
+conda activate IF-Defense
+<span class="token builtin class-name">cd</span> /work/sdim-lihc/3D_UDA/3D_UDA/IF-Defense/IF-Defense-main/baselines
+python hybrid_train.py <span class="token parameter variable">--model</span><span class="token operator">=</span>pointnet <span class="token parameter variable">--num_points</span><span class="token operator">=</span><span class="token number">1024</span> <span class="token parameter variable">--dataset</span><span class="token operator">=</span>conv_opt_mn40 <span class="token parameter variable">--def_data</span><span class="token operator">=</span>/work/sdim-lihc/3D_UDA/3D_UDA/IF-Defense/IF-Defense-main/baselines/data/convonet_opt-MN40_random_2048.npz<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>结束后，可以在脚本中指定路径看到<code>log</code>，里面详细记录了每一次训练的学习率，各类损失，训练准确率和测试准确率。总共训练了200个<code>epoch</code>，每个<code>epoch</code>600步，且在第187个<code>epoch</code>时原始数据达到最高准确率0.8849（和上面就差0.0x个百分点，可以忽略），在第184个<code>epoch</code>时防御数据达到最高准确率0.8756（和本节开头处呼应，这儿可以看到通过数据增强，只下降了1个百分点左右），如图所示。</p>
+<p><img src="5.png" alt=""></p>
 <hr>
 <h3 id="攻击">攻击</h3>
-<p>本文实现了<strong>扰动</strong>、<strong>添加点</strong>、<strong>添加聚类</strong>、**添加对象、<code>kNN</code><strong>以及变种的</strong><code>FGM</code>和<code>Drop</code>**攻击。攻击脚本位于<code>attack_scripts/</code>文件夹中。除了Drop方法无法有针对性地攻击受害模型之外，都可以根据预先分配的固定目标标签执行有针对性的攻击。</p>
+<p>本文实现了扰动**、<strong>添加点</strong>、<strong>添加聚类</strong>、**添加对象、<code>kNN</code>以及变种的<code>FGM</code>和<code>Drop</code>攻击。攻击脚本位于<code>attack_scripts/</code>文件夹中。除了<code>Drop</code>方法无法有针对性地攻击受害模型之外，都可以根据预先分配的固定目标标签执行有针对性的攻击。</p>
 <p>攻击非常耗时（例如，在扰动方法中进行10步的二分搜索），因此可以使用<code>PyTorch</code>中的<code>DistributedDataParallel</code>提供的多<code>GPU</code>支持来加速这一过程。有关每种攻击方法的详细使用方法，仍然可以参阅<code>command.txt</code>。</p>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token assign-left variable">NCCL_DEBUG</span><span class="token operator">=</span>INFO <span class="token assign-left variable">CUDA_VISIBLE_DEVICES</span><span class="token operator">=</span><span class="token number">0</span> python <span class="token parameter variable">-m</span> torch.distributed.launch <span class="token parameter variable">--nproc_per_node</span><span class="token operator">=</span><span class="token number">1</span> <span class="token parameter variable">--master_port</span><span class="token operator">=</span><span class="token number">29501</span> attack_scripts/targeted_perturb_attack.py <span class="token parameter variable">--model</span><span class="token operator">=</span><span class="token punctuation">&#123;</span><span class="token variable">$MODEL</span><span class="token punctuation">&#125;</span> <span class="token parameter variable">--num_points</span><span class="token operator">=</span><span class="token number">1024</span> <span class="token parameter variable">--dataset</span><span class="token operator">=</span><span class="token punctuation">&#123;</span><span class="token variable">$DATASET</span><span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>下面是对<code>train_victim_pointnet</code>在干净数据上预训练得到的模型进行攻击的脚本：</p>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token shebang important">#!/bin/bash</span>
+<span class="token comment">#BSUB -q 2a100-40</span>
+<span class="token comment">#BSUB -n 1</span>
+<span class="token comment">#BSUB -e attack_perturb_train_victim_pointnet.err</span>
+<span class="token comment">#BSUB -o attack_perturb_train_victim_pointnet.log</span>
+<span class="token comment">#BSUB -W 20:00</span>
+<span class="token comment">#BSUB -R "span[ptile=1]"</span>
+<span class="token comment">#BSUB -gpu "num=1/host"</span>
+<span class="token builtin class-name">export</span> <span class="token assign-left variable">NCCL_DEBUG</span><span class="token operator">=</span>INFO
+<span class="token builtin class-name">export</span> <span class="token assign-left variable">CUDA_VISIBLE_DEVICES</span><span class="token operator">=</span><span class="token number">0</span>
+
+<span class="token builtin class-name">echo</span> <span class="token string">"the log information of targeted_perturb_attack.py"</span> <span class="token operator">>></span> attack_perturb_train_victim_pointnet.log
+<span class="token function">date</span> <span class="token operator">>></span> attack_perturb_train_victim_pointnet.log
+module load python/anaconda3/2022.10
+module load cuda/11.8
+<span class="token builtin class-name">source</span> activate
+<span class="token comment"># conda init bash</span>
+conda activate IF-Defense
+<span class="token builtin class-name">cd</span> /work/sdim-lihc/3D_UDA/3D_UDA/IF-Defense/IF-Defense-main/baselines
+python <span class="token parameter variable">-m</span> torch.distributed.run <span class="token parameter variable">--nproc_per_node</span><span class="token operator">=</span><span class="token number">1</span> <span class="token parameter variable">--master_port</span><span class="token operator">=</span><span class="token number">29501</span> attack_scripts/targeted_perturb_attack.py <span class="token parameter variable">--model</span><span class="token operator">=</span>pointnet <span class="token parameter variable">--num_points</span><span class="token operator">=</span><span class="token number">1024</span> <span class="token parameter variable">--dataset</span><span class="token operator">=</span>mn40<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>下面是对<code>hybrid_train_victim_pointnet_conv_opt</code>在加强后的防御数据上预训练得到的模型进行攻击的脚本：</p>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token shebang important">#!/bin/bash</span>
+<span class="token comment">#BSUB -q 2a100-40</span>
+<span class="token comment">#BSUB -n 1</span>
+<span class="token comment">#BSUB -e attack_perturb_hybrid_train_victim_pointnet_conv_opt.err</span>
+<span class="token comment">#BSUB -o attack_perturb_hybrid_train_victim_pointnet_conv_opt.log</span>
+<span class="token comment">#BSUB -W 20:00</span>
+<span class="token comment">#BSUB -R "span[ptile=1]"</span>
+<span class="token comment">#BSUB -gpu "num=1/host"</span>
+<span class="token builtin class-name">export</span> <span class="token assign-left variable">NCCL_DEBUG</span><span class="token operator">=</span>INFO
+<span class="token builtin class-name">export</span> <span class="token assign-left variable">CUDA_VISIBLE_DEVICES</span><span class="token operator">=</span><span class="token number">0</span>
+
+<span class="token builtin class-name">echo</span> <span class="token string">"the log information of targeted_perturb_attack.py"</span> <span class="token operator">>></span> attack_perturb_hybrid_train_victim_pointnet_conv_opt.log
+<span class="token function">date</span> <span class="token operator">>></span> attack_perturb_hybrid_train_victim_pointnet_conv_opt.log
+module load python/anaconda3/2022.10
+module load cuda/11.8
+<span class="token builtin class-name">source</span> activate
+<span class="token comment"># conda init bash</span>
+conda activate IF-Defense
+<span class="token builtin class-name">cd</span> /work/sdim-lihc/3D_UDA/3D_UDA/IF-Defense/IF-Defense-main/baselines
+python <span class="token parameter variable">-m</span> torch.distributed.run <span class="token parameter variable">--nproc_per_node</span><span class="token operator">=</span><span class="token number">1</span> <span class="token parameter variable">--master_port</span><span class="token operator">=</span><span class="token number">29501</span> attack_scripts/targeted_perturb_attack.py <span class="token parameter variable">--model</span><span class="token operator">=</span>pointnet <span class="token parameter variable">--num_points</span><span class="token operator">=</span><span class="token number">1024</span> <span class="token parameter variable">--dataset</span><span class="token operator">=</span>conv_opt_mn40<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>攻击代码有很多地方踩坑，列举如下：</p>
+<ul>
+<li>由于我们需要攻击已经经过干净数据和增强的防御数据预训练后得到的模型，所以需要将<code>config.py</code>中的<code>pointnet</code>模型路径变更为对应文件存放位置，才能正确加载需要的模型，否则攻击的还是未经训练的模型，得到的结果还是错误的。注意路径撰写方式，如图所示：</li>
+</ul>
+<p><img src="7.png" alt=""></p>
+<ul>
+<li>文中使用了<code>python</code>的分布式跑代码，而大家的<code>gpu</code>序号各有不同，作者的序号是从<code>-1</code>开始的，而我们的是从<code>0</code>开始的，因此需要去对应的攻击文件中将<code>local_rank</code>的<code>default</code>值改为自己第一个序号的值，否则便会报错<code>error: unrecognized arguments: --local-rank=xx</code>，如图所示：</li>
+</ul>
+<p><img src="8.png" alt=""></p>
+<ul>
+<li>若是你的<code>torch</code>版本较高，那么还需要把执行命令中的<code>torch.distribution.launch</code>换成<code>torch.distriution.run</code>。</li>
+</ul>
 <hr>
-<h3 id="防御">防御</h3>
-<p>论文中实现了**<code>SRS</code>、<code>SOR</code>和<code>DUP-Net</code>**防御。要应用一种防御，只需运行以下命令（本地）：</p>
+<h3 id="基线防御（区别于本文的防御）">基线防御（区别于本文的防御）</h3>
+<p>本文也给出了<code>SRS</code>、<code>SOR</code>和<code>DUP-Net</code>防御。要应用一种防御，只需运行以下命令（本地）：</p>
 <pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token assign-left variable">CUDA_VISIBLE_DEVICES</span><span class="token operator">=</span><span class="token number">0</span> python defend_npz.py <span class="token parameter variable">--data_root</span><span class="token operator">=</span>path/to/adv_data.npz <span class="token parameter variable">--defense</span><span class="token operator">=</span>srs/sor/dup/<span class="token string">''</span><span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
-<p><code>lsf</code> 作业集群中，脚本代码如下：</p>
-<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash">~~~
+<p>但是我们暂时不用，因为使用本文的防御方法得到的防御数据已经存放在了<code>pretrain</code>文件夹中，如图所示：</p>
+<p><img src="6.png" alt=""></p>
+<p>防御结果仍然会保存为一个<code>NumPy npz</code>文件，保存在与<code>adv_data</code>相同的目录中。</p>
+<hr>
+<p>使用 <code>inference.py</code> 测试攻击/防御的性能：</p>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token assign-left variable">CUDA_VISIBLE_DEVICES</span><span class="token operator">=</span><span class="token number">0</span> python inference.py <span class="token parameter variable">--num_points</span><span class="token operator">=</span><span class="token number">1024</span> <span class="token parameter variable">--mode</span><span class="token operator">=</span>normal/target <span class="token parameter variable">--model</span><span class="token operator">=</span><span class="token punctuation">&#123;</span><span class="token variable">$MODEL</span><span class="token punctuation">&#125;</span> <span class="token parameter variable">--normalize_pc</span><span class="token operator">=</span>True/False <span class="token parameter variable">--dataset</span><span class="token operator">=</span><span class="token punctuation">&#123;</span><span class="token variable">$DATASET</span><span class="token punctuation">&#125;</span> <span class="token parameter variable">--data_root</span><span class="token operator">=</span>path/to/test_data.npz<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>例如，评估分别对在干净数据和<code>conv_opt_mn40</code>的防御数据上预训练后攻击得到的结果，<code>lsf</code>文件如下：</p>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token shebang important">#!/bin/bash</span>
+<span class="token comment">#BSUB -q 2a100-40</span>
+<span class="token comment">#BSUB -n 1</span>
+<span class="token comment">#BSUB -e evaluate_attack_perturb_train_victim_pointnet.err</span>
+<span class="token comment">#BSUB -o evaluate_attack_perturb_train_victim_pointnet.log</span>
+<span class="token comment">#BSUB -W 20:00</span>
+<span class="token comment">#BSUB -R "span[ptile=1]"</span>
+<span class="token comment">#BSUB -gpu "num=1/host"</span>
+<span class="token builtin class-name">export</span> <span class="token assign-left variable">CUDA_VISIBLE_DEVICES</span><span class="token operator">=</span><span class="token number">0</span>
 
-防御结果仍然会保存为一个<span class="token variable"><span class="token variable">`</span>NumPy npz<span class="token variable">`</span></span>文件，保存在与<span class="token variable"><span class="token variable">`</span>adv_data<span class="token variable">`</span></span>相同的目录中。
+<span class="token builtin class-name">echo</span> <span class="token string">"the log information of inference.py"</span> <span class="token operator">>></span> evaluate_attack_perturb_train_victim_pointnet.log
+<span class="token function">date</span> <span class="token operator">>></span> evaluate_attack_perturb_train_victim_pointnet.log
+module load python/anaconda3/2022.10
+module load cuda/11.8
+<span class="token builtin class-name">source</span> activate
+<span class="token comment"># conda init bash</span>
+conda activate IF-Defense
+<span class="token builtin class-name">cd</span> /work/sdim-lihc/3D_UDA/3D_UDA/IF-Defense/IF-Defense-main/baselines
+python inference.py <span class="token parameter variable">--num_points</span><span class="token operator">=</span><span class="token number">1024</span> <span class="token parameter variable">--mode</span><span class="token operator">=</span>target <span class="token parameter variable">--model</span><span class="token operator">=</span>pointnet <span class="token parameter variable">--normalize_pc</span><span class="token operator">=</span>True <span class="token parameter variable">--dataset</span><span class="token operator">=</span>mn40 <span class="token parameter variable">--data_root</span><span class="token operator">=</span>/work/sdim-lihc/3D_UDA/3D_UDA/IF-Defense/IF-Defense-main/baselines/attack/results/mn40_1024/Perturb/Perturb-pointnet-logits_kappa<span class="token operator">=</span><span class="token number">0.0</span>-success_1.0000-rank_0.npz<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token shebang important">#!/bin/bash</span>
+<span class="token comment">#BSUB -q 2a100-40</span>
+<span class="token comment">#BSUB -n 1</span>
+<span class="token comment">#BSUB -e evaluate_attack_perturb_hybrid_train_victim_pointnet_conv_opt.err</span>
+<span class="token comment">#BSUB -o evaluate_attack_perturb_hybrid_train_victim_pointnet_conv_opt.log</span>
+<span class="token comment">#BSUB -W 20:00</span>
+<span class="token comment">#BSUB -R "span[ptile=1]"</span>
+<span class="token comment">#BSUB -gpu "num=1/host"</span>
+<span class="token builtin class-name">export</span> <span class="token assign-left variable">CUDA_VISIBLE_DEVICES</span><span class="token operator">=</span><span class="token number">0</span>
 
----
-
-使用 <span class="token variable"><span class="token variable">`</span>inference.py<span class="token variable">`</span></span> 测试攻击/防御的性能：
-
-~~~shell
-<span class="token assign-left variable">CUDA_VISIBLE_DEVICES</span><span class="token operator">=</span><span class="token number">0</span> python inference.py <span class="token parameter variable">--num_points</span><span class="token operator">=</span><span class="token number">1024</span> <span class="token parameter variable">--mode</span><span class="token operator">=</span>normal/target <span class="token parameter variable">--model</span><span class="token operator">=</span><span class="token punctuation">&#123;</span><span class="token variable">$MODEL</span><span class="token punctuation">&#125;</span> <span class="token parameter variable">--normalize_pc</span><span class="token operator">=</span>True/False <span class="token parameter variable">--dataset</span><span class="token operator">=</span><span class="token punctuation">&#123;</span><span class="token variable">$DATASET</span><span class="token punctuation">&#125;</span> <span class="token parameter variable">--data_root</span><span class="token operator">=</span>path/to/test_data.npz<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<p>lsf 作业集群中，脚本代码如下：</p>
-<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<span class="token builtin class-name">echo</span> <span class="token string">"the log information of inference.py"</span> <span class="token operator">>></span> evaluate_attack_perturb_hybrid_train_victim_pointnet_conv_opt.log
+<span class="token function">date</span> <span class="token operator">>></span> evaluate_attack_perturb_hybrid_train_victim_pointnet_conv_opt.log
+module load python/anaconda3/2022.10
+module load cuda/11.8
+<span class="token builtin class-name">source</span> activate
+<span class="token comment"># conda init bash</span>
+conda activate IF-Defense
+<span class="token builtin class-name">cd</span> /work/sdim-lihc/3D_UDA/3D_UDA/IF-Defense/IF-Defense-main/baselines
+python inference.py <span class="token parameter variable">--num_points</span><span class="token operator">=</span><span class="token number">1024</span> <span class="token parameter variable">--mode</span><span class="token operator">=</span>target <span class="token parameter variable">--model</span><span class="token operator">=</span>pointnet <span class="token parameter variable">--normalize_pc</span><span class="token operator">=</span>True <span class="token parameter variable">--dataset</span><span class="token operator">=</span>conv_opt_mn40 <span class="token parameter variable">--data_root</span><span class="token operator">=</span>/work/sdim-lihc/3D_UDA/3D_UDA/IF-Defense/IF-Defense-main/baselines/attack/results/conv_opt_mn40_1024/Perturb/Perturb-pointnet-logits_kappa<span class="token operator">=</span><span class="token number">0.0</span>-success_1.0000-rank_0.npz<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>使用<code>lsf</code>文件时，文件路径需要更改，根据报错来就行，这里不再列举。干净数据下的攻击成功率和准确率如图所示：</p>
+<p><img src="9.png" alt=""></p>
+<p><code>conv_opt_mn40</code>的防御数据下的攻击成功率和准确率如图所示：</p>
+<p><img src="10.png" alt=""></p>
 <p>参考 <code>command.txt</code> 获取有关不同参数的详细信息。</p>
 <hr>
-<h2 id="名词解释及问题-a-id-s1-a">名词解释及问题<a id="s1"></a></h2>
+<h3 id="本文防御">本文防御</h3>
+<p>在根目录下的<code>ConvONet/command.txt</code>中可以查阅具体防御的使用方法，使用命令行是这样的：</p>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token assign-left variable">CUDA_VISIBLE_DEVICES</span><span class="token operator">=</span><span class="token number">0</span> python opt_defense.py <span class="token parameter variable">--sample_npoint</span><span class="token operator">=</span><span class="token number">1024</span> <span class="token parameter variable">--train</span><span class="token operator">=</span>False <span class="token parameter variable">--rep_weight</span><span class="token operator">=</span><span class="token number">500.0</span> <span class="token parameter variable">--data_root</span><span class="token operator">=</span>path/to/adv_data.npz<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>其中<code>npz</code>文件需要自行替换。</p>
+<p>分别对受攻击后的干净数据和防御数据进行防御，<code>lsf</code>脚本如下所示：</p>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token shebang important">#!/bin/bash</span>
+<span class="token comment">#BSUB -q 2a100-40</span>
+<span class="token comment">#BSUB -n 1</span>
+<span class="token comment">#BSUB -e defense_attack_perturb_hybrid_train_victim_pointnet_conv_opt.err</span>
+<span class="token comment">#BSUB -o defense_attack_perturb_hybrid_train_victim_pointnet_conv_opt.log</span>
+<span class="token comment">#BSUB -W 20:00</span>
+<span class="token comment">#BSUB -R "span[ptile=1]"</span>
+<span class="token comment">#BSUB -gpu "num=1/host"</span>
+<span class="token builtin class-name">export</span> <span class="token assign-left variable">CUDA_VISIBLE_DEVICES</span><span class="token operator">=</span><span class="token number">0</span>
+
+<span class="token builtin class-name">echo</span> <span class="token string">"the log information of inference.py"</span> <span class="token operator">>></span> defense_attack_perturb_hybrid_train_victim_pointnet_conv_opt.log
+<span class="token function">date</span> <span class="token operator">>></span> defense_attack_perturb_hybrid_train_victim_pointnet_conv_opt.log
+module load python/anaconda3/2022.10
+module load cuda/11.8
+<span class="token builtin class-name">source</span> activate
+<span class="token comment"># conda init bash</span>
+conda activate IF-Defense
+<span class="token builtin class-name">cd</span> /work/sdim-lihc/3D_UDA/3D_UDA/IF-Defense/IF-Defense-main/ConvONet
+python opt_defense.py <span class="token parameter variable">--sample_npoint</span><span class="token operator">=</span><span class="token number">1024</span> <span class="token parameter variable">--train</span><span class="token operator">=</span>False <span class="token parameter variable">--rep_weight</span><span class="token operator">=</span><span class="token number">500.0</span> <span class="token parameter variable">--data_root</span><span class="token operator">=</span>/work/sdim-lihc/3D_UDA/3D_UDA/IF-Defense/IF-Defense-main/baselines/attack/results/mn40_1024/Perturb/Perturb-pointnet-logits_kappa<span class="token operator">=</span><span class="token number">0.0</span>-success_1.0000-rank_0.npz<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token shebang important">#!/bin/bash</span>
+<span class="token comment">#BSUB -q 2a100-40</span>
+<span class="token comment">#BSUB -n 1</span>
+<span class="token comment">#BSUB -e defense_attack_perturb_train_victim_pointnet.err</span>
+<span class="token comment">#BSUB -o defense_attack_perturb_train_victim_pointnet.log</span>
+<span class="token comment">#BSUB -W 20:00</span>
+<span class="token comment">#BSUB -R "span[ptile=1]"</span>
+<span class="token comment">#BSUB -gpu "num=1/host"</span>
+<span class="token builtin class-name">export</span> <span class="token assign-left variable">CUDA_VISIBLE_DEVICES</span><span class="token operator">=</span><span class="token number">0</span>
+
+<span class="token builtin class-name">echo</span> <span class="token string">"the log information of inference.py"</span> <span class="token operator">>></span> defense_attack_perturb_train_victim_pointnet.log
+<span class="token function">date</span> <span class="token operator">>></span> defense_attack_perturb_train_victim_pointnet.log
+module load python/anaconda3/2022.10
+module load cuda/11.8
+<span class="token builtin class-name">source</span> activate
+<span class="token comment"># conda init bash</span>
+conda activate IF-Defense
+<span class="token builtin class-name">cd</span> /work/sdim-lihc/3D_UDA/3D_UDA/IF-Defense/IF-Defense-main/ConvONet
+python opt_defense.py <span class="token parameter variable">--sample_npoint</span><span class="token operator">=</span><span class="token number">1024</span> <span class="token parameter variable">--train</span><span class="token operator">=</span>False <span class="token parameter variable">--rep_weight</span><span class="token operator">=</span><span class="token number">500.0</span> <span class="token parameter variable">--data_root</span><span class="token operator">=</span>/work/sdim-lihc/3D_UDA/3D_UDA/IF-Defense/IF-Defense-main/baselines/attack/results/mn40_1024/Perturb/Perturb-pointnet-logits_kappa<span class="token operator">=</span><span class="token number">0.0</span>-success_1.0000-rank_0.npz<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<hr>
+<h2 id="名词解释及-command-txt-的分析-a-id-s1-a">名词解释及 command.txt 的分析<a id="s1"></a></h2>
 <h3 id="Numpy-npz-文件"><strong>Numpy npz</strong> <strong>文件</strong></h3>
 <p><code>Numpy npz</code>文件是指 <code>NumPy</code> 的压缩文件格式。<code>NumPy</code> 是 <code>Python</code> 中用于科学计算的一个库，它提供了多维数组对象以及用于处理这些数组的函数。<code>npz</code> 文件是 <code>NumPy</code>中 用于保存多个 <code>NumPy</code>数组的压缩文件格式，通常用于存储多个相关的数据数组。在这个项目中，<code>npz</code> 文件被用来存储点云数据、<code>Ground Truth</code>标签等信息，以便于加载和处理。</p>
 <hr>
 <h3 id="关于-baseline-中的-command-txt-的剖析">关于 baseline 中的 command.txt 的剖析</h3>
+<h4 id="在纯净数据上训练受害模型">在纯净数据上训练受害模型</h4>
+<p>本文提供了四个受害模型：<code>pointnet、pointnet2、dgcnn、pointconv</code></p>
+<p>我们需要在命令中指定要训练的受害模型替代<code>&#123;$MODEL&#125;</code>部分。注意这里的<code>dataset</code>默认使用的是<code>mn40</code>，因为是在干净数据上训练，所以不能胡乱修改所使用的数据集。</p>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token assign-left variable">CUDA_VISIBLE_DEVICES</span><span class="token operator">=</span><span class="token number">0</span> python train.py <span class="token parameter variable">--model</span><span class="token operator">=</span><span class="token punctuation">&#123;</span><span class="token variable">$MODEL</span><span class="token punctuation">&#125;</span> <span class="token parameter variable">--num_points</span><span class="token operator">=</span><span class="token number">1024</span><span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<hr>
+<h4 id="对IF-Defense中使用的受害模型进行混合训练">对IF-Defense中使用的受害模型进行混合训练</h4>
+<p>我们需要在命令中指定要训练的受害模型、数据集名称和数据经过防御后的路径。</p>
+<p>我们对纯净数据和防御数据（而不是对抗数据，因此这不是对抗性训练！）进行模型训练，可以参考论文附录了解混合训练的更多细节；</p>
+<p><code>$DATASET</code> 应该是 <code>'&#123;$METHOD&#125;_mn40'</code>，例如 <code>remesh_mn40、opt_mn40、conv_opt_mn40</code> 然后，这些权重将用作评估<code>IF-Defense</code>时的受害模型。</p>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token assign-left variable">CUDA_VISIBLE_DEVICES</span><span class="token operator">=</span><span class="token number">0</span> python hybrid_train.py <span class="token parameter variable">--model</span><span class="token operator">=</span><span class="token punctuation">&#123;</span><span class="token variable">$MODEL</span><span class="token punctuation">&#125;</span> <span class="token parameter variable">--num_points</span><span class="token operator">=</span><span class="token number">1024</span> <span class="token parameter variable">--dataset</span><span class="token operator">=</span><span class="token punctuation">&#123;</span><span class="token variable">$DATASET</span><span class="token punctuation">&#125;</span> <span class="token parameter variable">--def_data</span><span class="token operator">=</span>path/to/defense_data.npz<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<ul>
+<li><strong>纯净数据（clean data）</strong>：指的是没有任何攻击或干扰的原始数据，通常是用于模型训练和测试的标准数据集，用于评估模型在正常情况下的性能。</li>
+<li><strong>防御数据（defense data）</strong>：指的是经过某种防御方法处理过的数据。在这种情况下，模型在纯净数据上训练，然后对该数据进行某种防御方法的处理（经过防御模块后后续再输入网络，但因为没有攻击情况下防御手段本身就是一种微弱的数据污染，造成前文中提到的），以增强模型对特定攻击的抵抗能力。防御数据通常用于评估模型在受到特定攻击时的性能。</li>
+<li><strong>对抗数据（adversarial data）</strong>：指的是经过特定攻击（如对抗性攻击）处理过的数据，旨在欺骗或误导模型以产生错误的预测结果。对抗数据通常用于评估模型在受到对抗性攻击时的鲁棒性和抵抗能力。</li>
+</ul>
+<p>在所提到的训练过程中，模型同时在纯净数据和防御数据上进行训练，以提高模型对于特定攻击的抵抗能力，但并没有使用对抗数据进行训练，因此这不是对抗性训练。</p>
+<hr>
+<h4 id="评估模型准确率-攻击成功率">评估模型准确率/攻击成功率</h4>
+<p>需要指定要测试的受害模型、测试模式、数据集和测试数据的路径；正常模式下报告准确率，而目标模式下报告准确率和攻击成功率。在测试对抗点云时，不需要设置 --normalize_pc=True。</p>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token assign-left variable">CUDA_VISIBLE_DEVICES</span><span class="token operator">=</span><span class="token number">0</span> python inference.py <span class="token parameter variable">--num_points</span><span class="token operator">=</span><span class="token number">1024</span> <span class="token parameter variable">--mode</span><span class="token operator">=</span>normal/target <span class="token parameter variable">--model</span><span class="token operator">=</span><span class="token punctuation">&#123;</span><span class="token variable">$MODEL</span><span class="token punctuation">&#125;</span> <span class="token parameter variable">--normalize_pc</span><span class="token operator">=</span>True/False <span class="token parameter variable">--dataset</span><span class="token operator">=</span><span class="token punctuation">&#123;</span><span class="token variable">$DATASET</span><span class="token punctuation">&#125;</span> <span class="token parameter variable">--data_root</span><span class="token operator">=</span>path/to/test_data.npz<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<hr>
+<h4 id="执行攻击的文件在-attack-scripts-中">执行攻击的文件在 attack_scripts/ 中</h4>
+<p>文章提供了 7 种攻击的 <code>PyTorch</code> 实现： <code>Perturb、Add（Point）、Add Cluster/Object</code>（未在论文中使用）、<code>kNN</code>、<code>Drop</code> 以及 <code>FGM</code> 的变体（未在论文中使用） 这些攻击（除了 <code>Dropping</code>）非常耗时，因为它们使用 <code>CW</code> 攻击框架，需要多步二分搜索， <code>FGM</code> 需要多次优化步骤。</p>
+<p>为了加速攻击过程，本文使用了 <code>PyTorch</code> 中提供的多 <code>GPU</code> 支持 <code>DistributedDataParallel</code> 我们需要分配 <code>GPU</code> 索引，<code>--nproc_per_node=&#123;$NUM_GPU_USED&#125;</code> 和一个唯一的 <code>master_port</code>。</p>
+<p>攻击结束后，每个进程（<code>GPU</code>）生成的 <code>adv</code> 数据将分别存储为 <code>npz</code> 文件，我们需要运行一个合并命令将它们合并成一个 <code>npz</code> 文件。</p>
+<hr>
+<h4 id="Perturb（我们工作就是Perturb所以暂时只记录此攻击方法，后续工作若是用到再补充）">Perturb（我们工作就是Perturb所以暂时只记录此攻击方法，后续工作若是用到再补充）</h4>
+<p>我们需要在命令中指定受害模型和数据集名称，数据集将指定您要攻击的受害模型权重。</p>
+<p>例如，如果想尝试 <code>ConvONet-Opt</code>，则可以设置 <code>$DATASET=conv_opt_mn40</code> 进行攻击，然后进行防御。</p>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token assign-left variable">NCCL_DEBUG</span><span class="token operator">=</span>INFO <span class="token assign-left variable">CUDA_VISIBLE_DEVICES</span><span class="token operator">=</span><span class="token number">0</span> python <span class="token parameter variable">-m</span> torch.distributed.launch <span class="token parameter variable">--nproc_per_node</span><span class="token operator">=</span><span class="token number">1</span> <span class="token parameter variable">--master_port</span><span class="token operator">=</span><span class="token number">29501</span> attack_scripts/targeted_perturb_attack.py <span class="token parameter variable">--model</span><span class="token operator">=</span><span class="token punctuation">&#123;</span><span class="token variable">$MODEL</span><span class="token punctuation">&#125;</span> <span class="token parameter variable">--num_points</span><span class="token operator">=</span><span class="token number">1024</span> <span class="token parameter variable">--dataset</span><span class="token operator">=</span><span class="token punctuation">&#123;</span><span class="token variable">$DATASET</span><span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<hr>
+<h4 id="合并被攻击的-npz-文件">合并被攻击的 npz 文件</h4>
+<p>不同进程生成的被攻击的数据将存储为： <code>'xxx/&#123;$attack_method&#125;-&#123;$victim_model&#125;-success_&#123;$success_rate&#125;-rank_&#123;$process_rank&#125;.npz'</code> 我们需要使用此命令将它们合并成一个 <code>npz</code> 文件：</p>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash">python util/merge_attack_results.py <span class="token parameter variable">--data_root</span><span class="token operator">=</span><span class="token string">'xxx/&#123;$attack_method&#125;-&#123;$victim_model&#125;-success_'</span><span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>然后，我们将每个 <code>npz</code> 文件中的被攻击数据、<code>Ground Truth</code> 和目标标签连接起来，还会对攻击成功率进行求和，分布式 <code>npz</code> 文件将被删除，只剩下最新的一个。</p>
+<hr>
+<h4 id="基线防御">基线防御</h4>
+<p>我们需要在命令中指定要应用的防御方法，如果未指定，将应用所有三种方法。</p>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token assign-left variable">CUDA_VISIBLE_DEVICES</span><span class="token operator">=</span><span class="token number">0</span> python defend_npz.py <span class="token parameter variable">--data_root</span><span class="token operator">=</span>path/to/adv_data.npz <span class="token parameter variable">--defense</span><span class="token operator">=</span>srs/sor/dup/<span class="token string">''</span><span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>纯净数据在pointnet上训练——攻击——评估——防御——对比结果</p>
+<p>防御数据在pointnet上训练——攻击——评估——防御——对比结果（防御后应该和攻击后差不多，因为一开始输入的数据就是经过了防御的数据）</p>
+<p><code>/work/sdim-lihc/3D_UDA/3D_UDA/IF-Defense/IF-Defense-main/baselines/attack/results/mn40_1024/Perturb/ConvONet-Opt/convonet_opt-Perturb-pointnet-logits_kappa=0.0-success_1.0000-rank_0.npz</code></p>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token shebang important">#!/bin/bash</span>
+<span class="token comment">#BSUB -q 4a100-80</span>
+<span class="token comment">#BSUB -n 1</span>
+<span class="token comment">#BSUB -e evaluate.err</span>
+<span class="token comment">#BSUB -o evaluate.log</span>
+<span class="token comment">#BSUB -W 20:00</span>
+<span class="token comment">#BSUB -R "span[ptile=1]"</span>
+<span class="token comment">#BSUB -gpu "num=1/host"</span>
+<span class="token builtin class-name">export</span> <span class="token assign-left variable">CUDA_VISIBLE_DEVICES</span><span class="token operator">=</span><span class="token number">0</span>
+
+<span class="token builtin class-name">echo</span> <span class="token string">"the log information of inference.py"</span> <span class="token operator">>></span> evaluate.log
+<span class="token function">date</span> <span class="token operator">>></span> evaluate.log
+module load python/anaconda3/2022.10
+module load cuda/11.8
+<span class="token builtin class-name">source</span> activate
+<span class="token comment"># conda init bash</span>
+conda activate IF-Defense
+<span class="token builtin class-name">cd</span> /work/sdim-lihc/3D_UDA/3D_UDA/IF-Defense/IF-Defense-main/baselines
+python inference.py <span class="token parameter variable">--num_points</span><span class="token operator">=</span><span class="token number">1024</span> <span class="token parameter variable">--mode</span><span class="token operator">=</span>target <span class="token parameter variable">--model</span><span class="token operator">=</span>pointnet <span class="token parameter variable">--normalize_pc</span><span class="token operator">=</span>True <span class="token parameter variable">--dataset</span><span class="token operator">=</span>mn40 <span class="token parameter variable">--data_root</span><span class="token operator">=</span>/work/sdim-lihc/3D_UDA/3D_UDA/IF-Defense/IF-Defense-main/baselines/attack/results/mn40_1024/Perturb/ConvONet-Opt/convonet_opt-Perturb-pointnet-logits_kappa<span class="token operator">=</span><span class="token number">0.0</span>-success_1.0000-rank_0.npz<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
 
                 
             </div>
@@ -1418,7 +1641,7 @@ code[class*="language-"], pre[class*="language-"] { white-space: pre !important;
             <br>
             
             &nbsp;<i class="fas fa-chart-area"></i>&nbsp;站点总字数:&nbsp;<span
-                class="white-color">25k</span>&nbsp;字
+                class="white-color">28.1k</span>&nbsp;字
             
             
             
