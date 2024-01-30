@@ -469,14 +469,14 @@
                 
                 <div class="info-break-policy">
                     <i class="far fa-file-word fa-fw"></i>文章字数:&nbsp;&nbsp;
-                    7.2k
+                    7.3k
                 </div>
                 
 
                 
                 <div class="info-break-policy">
                     <i class="far fa-clock fa-fw"></i>阅读时长:&nbsp;&nbsp;
-                    25 分
+                    26 分
                 </div>
                 
 
@@ -702,6 +702,10 @@
 <hr>
 <h3 id="5-Conclusion">5. Conclusion</h3>
 <p>在本文中，提出了一个名为IF-Defense的通用框架，用于防御3D点云中的对抗攻击，同时解决了点扰动和表面扭曲效应。我们的IF-Defense通过根据几何感知和分布感知损失优化受攻击点的坐标来学习恢复干净的点云，从而通过隐式函数恢复表面上的扭曲，并通过优化消除点分布上的扰动。广泛的实验证明，IF-Defense在PointNet、PointNet++、DGCNN、PointConv和RS-CNN上对抗各种3D点云对抗攻击的性能始终优于现有的对抗性防御方法。</p>
+<hr>
+<h3 id="附录补充实验细节">附录补充实验细节</h3>
+<h4 id="混合训练">混合训练</h4>
+<p>当使用 IF-Defense 模块在干净的点云上进行测试时，纯粹基于干净数据训练的受害者模型的准确性降低了高达 5%。（这其实表面在没有攻击的情况下，此时的防御策略反而会成为另一种“攻击”）为了消除干净点云和防御点云之间的域差距，本文在干净点云和防御点云上训练了受害者模型（称为混合训练），并使用它们来评估 IF-Defense 的性能。复现后发现，采用混合训练后再采用防御策略，性能下降仅仅为1%左右。</p>
 <hr>
 <p><a id="s1"></a></p>
 <h3 id="名词解释及问题">名词解释及问题</h3>
@@ -1534,7 +1538,7 @@ code[class*="language-"], pre[class*="language-"] { white-space: pre !important;
             <br>
             
             &nbsp;<i class="fas fa-chart-area"></i>&nbsp;站点总字数:&nbsp;<span
-                class="white-color">28.1k</span>&nbsp;字
+                class="white-color">29.9k</span>&nbsp;字
             
             
             
