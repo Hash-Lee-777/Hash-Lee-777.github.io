@@ -523,17 +523,17 @@
 <p>将具有归一化坐标c∗={x∗,y∗,z∗}的特征f转移到体素网格{Vm,p,q}时，体素网格的插值特征fi计算为位于网格中的点的特征的平均值。<br>
 $$<br>
 \begin{gathered}<br>
-\boldsymbol{V}<em>{m, p, q}=\frac{1}{K</em>{m, p, q}} \sum_{i=1}^n \boldsymbol{I}\left[\text { floor }\left(x_i^* \times r\right)=m\right. \<br>
+\boldsymbol{V}_{m, p, q}=\frac{1}{K_{m, p, q}} \sum_{i=1}^n \boldsymbol{I}\left[\text { floor }\left(x_i^* \times r\right)=m\right. \<br>
 \left.\operatorname{floor}\left(y_i^* \times r\right)=p, \text { floor }\left(z_i^* \times r\right)=q\right] \times f_i<br>
 \end{gathered}<br>
 $$<br>
 这个方程描述了将具有归一化坐标的特征$f_i$转移到体素网格$V_{m,p,q}$的过程。具体来说，对于体素网格中的每个体素$(m, p, q)$，通过计算位于体素网格中的点的特征的平均值来计算插值特征。这里的$K_{m,p,q}$表示体素网格$(m, p, q)$中包含的点的数量。</p>
-<p>方程中的$\text{floor}$函数将归一化坐标$x_i^<em>, y_i^</em>, z_i^*$乘以$r$后取整，以将归一化坐标映射到体素网格的索引空间。$\boldsymbol{I}$是指示函数，当取整后的归一化坐标与体素网格索引匹配时取值为1，否则为0。通过对满足条件的点的特征进行求和并除以$K_{m,p,q}$，得到体素网格$(m, p, q)$中的插值特征。</p>
+<p>方程中的$\text{floor}$函数将归一化坐标xi*, yi*, zi*乘以r后取整，以将归一化坐标映射到体素网格的索引空间。$\boldsymbol{I}$是指示函数，当取整后的归一化坐标与体素网格索引匹配时取值为1，否则为0。通过对满足条件的点的特征进行求和并除以K{m,p,q}，得到体素网格(m, p, q)中的插值特征。</p>
 <hr>
 <h4 id="3-3-Baseline-Clustering-and-Iteration">3.3. Baseline: Clustering and Iteration</h4>
 <p>（1）在点云中使用当前的嵌入和k均值<a href="#s2">聚类</a>来对具有超级点引导的点进行聚类。目标是最小化损失函数：<br>
 $$<br>
-\min <em>{\boldsymbol{l}, \boldsymbol{\mu}} \sum_i\left|f_i^{\prime}-\mu</em>{l_i^{s p}}\right|^2<br>
+\min _{\boldsymbol{l}, \boldsymbol{\mu}} \sum_i\left|f_i^{\prime}-\mu_{l_i^{s p}}\right|^2<br>
 $$<br>
 这个公式表示了一个优化问题，其目标是最小化所有点的特征与其所属聚类中心之间的欧氏距离的平方和。具体来说：</p>
 <ul>
@@ -545,7 +545,7 @@ $$<br>
 <p>因此，整个公式的目标是通过选择合适的聚类标签向量$\boldsymbol{l}$和聚类中心向量$\boldsymbol{\mu}$，使得所有点的特征与其所属聚类中心之间的欧氏距离的平方和最小化。</p>
 <p>（2）使用类标签作为伪标签，通过交叉熵损失训练分类器，在点云设置中表示为：<br>
 $$<br>
-\min <em>{\theta, W} \sum_i L</em>{C E}\left(g_W\left(f_i^{\prime}\right), l_i^{s p}, \boldsymbol{\mu}\right)<br>
+\min _{\theta, W} \sum_i L_{C E}\left(g_W\left(f_i^{\prime}\right), l_i^{s p}, \boldsymbol{\mu}\right)<br>
 $$<br>
 这个公式表示的是一个损失函数，用于训练一个带参数 $W$ 的分类器 $g_W$，使其预测的结果尽可能接近真实的聚类标签 $l_i^{sp}$。具体来说：</p>
 <ul>
@@ -583,27 +583,24 @@ $$<br>
 $$<br>
 接下来，将这两个特征转换为体素网格：<br>
 $$<br>
-\boldsymbol{v}_1=\boldsymbol{Z}\left(\boldsymbol{f}_1, \boldsymbol{c}_1^<em>\right), \boldsymbol{v}_2=\boldsymbol{Z}\left(\boldsymbol{f}_2, \boldsymbol{c}_2^</em>\right)<br>
+\boldsymbol{v}_1=\boldsymbol{Z}\left(\boldsymbol{f}_1, \boldsymbol{c}_1^* \right), \boldsymbol{v}_2=\boldsymbol{Z}\left(\boldsymbol{f}_2, \boldsymbol{c}_2^* \right)<br>
 $$<br>
 这个公式描述了如何将原始的特征表示转换为体素化的特征表示。具体来说，对于第一个路径，使用体素化操作Z将特征表示f1和规范化的坐标c1转换为体素化的特征表示v1。对于第二个路径，同样地，使用体素化操作Z将特征表示f2和规范化的坐标c2转换为体素化的特征表示v2。</p>
 <p>在这之后，体素化特征变换被应用到体积领域中：只有路径1的特征被变换，而另一个保持不变。几何变换作用于体素化特征v，相应的逆几何变换作用于输出的体素特征v_out：<br>
 $$<br>
-\boldsymbol{v}<em>1^{\text {out }}=\boldsymbol{G}^{-1}\left{g</em>\theta\left[\boldsymbol{G}\left(\boldsymbol{v}_1\right)\right]\right}, \boldsymbol{v}<em>2^{\text {out }}=g</em>\theta\left(\boldsymbol{v}_2\right)<br>
+\boldsymbol{v}_1^{\text {out }}=\boldsymbol{G}^{-1}{g_\theta[\boldsymbol{G}(\boldsymbol{v}_1)]}, \boldsymbol{v}_2^{\text {out }}=g_\theta(\boldsymbol{v}_2)<br>
 $$<br>
 这个公式描述了两个路径的处理过程。第一个路径中，先对体素化特征v1进行几何变换G，然后通过参数为θ的卷积网络gθ处理，最后再应用逆几何变换G^(-1)。第二个路径中，直接通过参数为θ的卷积网络gθ处理体素化特征v2。</p>
 <p>随后，进行去体素化以获得聚类特征：<br>
 $$<br>
-\boldsymbol{f}_1^{\prime}=\boldsymbol{Z}^{-1}\left(\boldsymbol{v}_1^{\text {out }}, \boldsymbol{c}_1^<em>\right), \boldsymbol{f}_2^{\prime}=\boldsymbol{Z}^{-1}\left(\boldsymbol{v}_2^{\text {out }}, \boldsymbol{c}_2^</em>\right)<br>
+\boldsymbol{f}_1^{\prime}=\boldsymbol{Z}^{-1}\left(\boldsymbol{v}_1^{\text {out }}, \boldsymbol{c}_1^* \right), \boldsymbol{f}_2^{\prime}=\boldsymbol{Z}^{-1}\left(\boldsymbol{v}_2^{\text {out }}, \boldsymbol{c}_2^* \right)<br>
 $$<br>
 这个公式描述了如何将输出的体素化特征转换回原始的特征表示。具体来说，对于第一个路径，使用逆体素化操作Z(-1)将体素化的输出特征v1out以及规范化的坐标c1转换回原始的特征表示f1’。对于第二个路径，同样地，使用逆体素化操作Z(-1)将体素化的输出特征v2out以及规范化的坐标c2转换回原始的特征表示f2’。</p>
 <hr>
 <h4 id="3-5-Losses-and-Labelling-Scheme">3.5. Losses and Labelling Scheme</h4>
 <p>这段描述了在给定输入点云c和特征f的情况下，根据在第3.3节介绍的颜色和几何变换，可以产生两种不同的特征表示f’1和f’2。利用这两种特征表示，分别对它们进行聚类，得到两组中心和伪标签：<br>
 $$<br>
-\begin{aligned}<br>
-&amp; \boldsymbol{l}^{(\mathbf{1})}, \boldsymbol{\mu}^{(\mathbf{1})}=\arg \min <em>{\boldsymbol{l}, \boldsymbol{\mu}} \sum_i\left|f</em>{1 i}^{\prime}-\mu_{l_i^{s p}}\right|^2 \<br>
-&amp; \boldsymbol{l}^{(\mathbf{2})}, \boldsymbol{\mu}^{(\mathbf{2})}=\arg \min <em>{\boldsymbol{l}, \boldsymbol{\mu}} \sum_i\left|f</em>{2 i}^{\prime}-\mu_{l_i^{s p}}\right|^2<br>
-\end{aligned}<br>
+\begin{aligned} &amp; \boldsymbol{l}^{(1)}, \boldsymbol{\mu}^{(1)}=\arg \min_{\boldsymbol{l}, \boldsymbol{\mu}} \sum_i\left|f_{1 i}^{\prime}-\mu_{l_i^{s p}}\right|^2  &amp; \boldsymbol{l}^{(2)}, \boldsymbol{\mu}^{(2)}=\arg \min_{\boldsymbol{l}, \boldsymbol{\mu}} \sum_i\left|f_{2 i}^{\prime}-\mu_{l_i^{s p}}\right|^2\end{aligned}<br>
 $$<br>
 这个公式表示了对两种不同特征表示进行聚类的过程。其中，l^(1) 和 µ^(1) 分别表示第一种特征表示的聚类标签和聚类中心，它们是通过最小化每个数据点f’1i与其对应聚类中心的欧氏距离的平方和来确定的。l2类似。</p>
 <p>设置两个损失函数。首先，特征表示应该与同一路径产生的伪标签匹配：<br>
