@@ -4,7 +4,7 @@
 
 <head>
     <meta charset="utf-8">
-    <meta name="keywords" content="DUP-Net ICCV 2019 阅读笔记, Lee的小站">
+    <meta name="keywords" content="U3DS阅读笔记, Lee的小站">
     <meta name="description" content="">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
@@ -16,7 +16,7 @@
     <!-- Global site tag (gtag.js) - Google Analytics -->
 
 
-    <title>DUP-Net ICCV 2019 阅读笔记 | Lee的小站</title>
+    <title>U3DS阅读笔记 | Lee的小站</title>
     <link rel="icon" type="image/png" href="/favicon.png">
 
     <link rel="stylesheet" type="text/css" href="/libs/awesome/css/all.css">
@@ -314,12 +314,12 @@
 
 
 
-<div class="bg-cover pd-header post-cover" style="background-image: url('/medias/featureimages/18.jpg')">
+<div class="bg-cover pd-header post-cover" style="background-image: url('/medias/featureimages/1.jpg')">
     <div class="container" style="right: 0px;left: 0px;">
         <div class="row">
             <div class="col s12 m12 l12">
                 <div class="brand">
-                    <h1 class="description center-align post-title">DUP-Net ICCV 2019 阅读笔记</h1>
+                    <h1 class="description center-align post-title">U3DS阅读笔记</h1>
                 </div>
             </div>
         </div>
@@ -460,7 +460,7 @@
                 
                 <div class="post-date info-break-policy">
                     <i class="far fa-calendar-minus fa-fw"></i>发布日期:&nbsp;&nbsp;
-                    2024-01-19
+                    2024-02-29
                 </div>
                 
 
@@ -469,14 +469,14 @@
                 
                 <div class="info-break-policy">
                     <i class="far fa-file-word fa-fw"></i>文章字数:&nbsp;&nbsp;
-                    7.6k
+                    7k
                 </div>
                 
 
                 
                 <div class="info-break-policy">
                     <i class="far fa-clock fa-fw"></i>阅读时长:&nbsp;&nbsp;
-                    27 分
+                    25 分
                 </div>
                 
 
@@ -495,190 +495,186 @@
         <div class="card-content article-card-content">
             <div id="articleContent">
                 <h3 id="写在前面的话">写在前面的话</h3>
-<p>将LaTeX表达式放在<code>$$</code>符号之间，并将所有的<code>\</code>转义为<code>\\</code>，也是写完本篇文章后发现的解决公式不能正常显示的一个途径。</p>
-<p>本文全称是——DUP-Net：用于 3D 对抗点云防御的降噪器和上采样器网络，在第一个工作中，我们准备借鉴本文的思想来作为我们的防御模块之一。</p>
-<p>文章链接：<a target="_blank" rel="noopener" href="https://openaccess.thecvf.com/content_ICCV_2019/html/Zhou_DUP-Net_Denoiser_and_Upsampler_Network_for_3D_Adversarial_Point_Clouds_ICCV_2019_paper.html">ICCV 2019 Open Access Repository (thecvf.com)</a></p>
+<p>2月最后一天了，一个多月没发论文笔记，都在狂赶实验，难绷…</p>
 <hr>
 <h3 id="0-Abstract">0 Abstract</h3>
-<p>这段文字讨论了神经网络在3D点云分类中对抗性样本的脆弱性，并说明本文提出了一种名为Denoiser and UPsampler Network（DUP-Net）的防御结构。这两个模块通过删除或添加点来<a href="#s1">重建表面平滑度</a>，其中统计异常值去除（SOR）和数据驱动上采样网络分别被视为去噪器和上采样器。与基准防御相比，DUP-Net具有三个优势。首先，采用DUP-Net作为防御手段，目标模型对<strong>白盒对抗性攻击</strong>更加鲁棒。其次，统计异常值去除提供额外的鲁棒性，因为它是一个<a href="#s2">非可微的去噪操作</a>。第三，上采样网络可以在小型数据集上训练，并且对来自其他点云数据集生成的对抗性攻击具有良好的防御能力。本文进行了各种实验证明DUP-Net在实践中作为防御手段非常有效。最佳防御措施在200个删除点的情况下，消除了83.8%的C&amp;W和l2损失攻击（点移位），50.0%的C&amp;W和Hausdorff距离损失攻击（点添加）以及9.0%的显著性图损失攻击（点删除）在PointNet上。</p>
+<p>该摘要介绍了当代点云分割方法的局限性，这些方法依赖于丰富注释的数据。本文介绍了<code>U3DS3</code>，作为迈向任何整体3D场景的完全无监督点云分割的一步。利用一种通用的无监督分割方法，用于室内和室外静态3D点云中的对象和背景，无需模型预训练，仅利用点云的固有信息实现全3D场景分割。提出的方法的步骤：根据场景的几何特征生成超点——通过基于空间聚类的方法进行学习——通过伪标签进行迭代训练。在<code>ScanNet</code>和<code>SemanticKITTI</code>数据集上实现了<code>sota</code>。</p>
 <hr>
 <h3 id="1-Introduction">1 Introduction</h3>
-<p>DNN对于对抗性样本具有脆弱性，这些对抗性样本是攻击者通过对原始输入添加几乎不可察觉的扰动而恶意创建的。已经有对抗性扰动的例子被用来攻击图像分类服务、语音识别系统和自动驾驶系统。</p>
-<p>现存的防御方法可以分为三个主要类别：输入转换、对抗性训练和梯度掩蔽。除了防御之外，还有一种抵抗攻击的方法是在将对抗性样本输入网络之前检测它们，例如MagNet和基于隐写分析的检测方法。</p>
-<p>本文的主要贡献主要包括：</p>
-<p>（1）提出了两个新的防御模块，以减轻对抗性点云，相较于基准方法具有更好的性能。</p>
-<p>（2）利用去噪层（统计异常值去除）的非可微性质来抵御对抗性白盒攻击。</p>
-<p>（3）上采样网络可以在小型数据集上训练，并且对于来自其他点云数据集生成的对抗性攻击有良好的防御能力。</p>
+<p>由于点云的无序和非结构化性质，对其进行分割并不简单。大多数工作都是完全监督的，依赖于丰富注释的数据。本文工作旨在表征3D特征，不需要任何明确的指导，使其能够从数据的固有结构中学习，且不受错误、偏差或不一致标注的影响，能够在不依赖这些不准确的标注的情况下进行准确的分割。</p>
+<p>虽然一些成果已经通过UDA等方式处理了3D点云数据的无监督分割学习，但本文的工作并不依赖于迁移学习。总体策略：（后续会详细解释）应用体素云连接分割（VCCS）来生成初始超点，并根据超点的距离和法线将它们合并——提出一种基线方法，通过在3D点云的特征上应用小批量k均值，生成和更新聚类中心，并计算特征与聚类中心之间的距离，根据超点的指导为每个点分配伪标签——使用伪标签训练网络，为下一次迭代聚类提供新的网络参数——应用一个非参数分类器，仅在特征空间距离上操作——通过利用体积表示的不变性和等变性，对点云输入应用不同的体积变换，并在这些特征表示上应用后续的体素化逆几何变换。</p>
 <hr>
-<h3 id="2-Related-Work（略，非重点，后续用到补充）">2 Related Work（略，非重点，后续用到补充）</h3>
-<hr>
-<h3 id="3-Defenses-against-Adversarial-Point-Cloud">3 Defenses against Adversarial Point Cloud</h3>
-<p>在3D点云防御中的目标，即构建一个对抗性样本具有鲁棒性的网络，即它能够在对抗性点云上正确分类，并在干净点云上几乎没有性能损失。形式上，给定一个分类模型 f 和一个输入 X˜，它可以是原始输入 X，也可以是对抗性输入 X′，防御方法的目标是通过数据增强来训练一个鲁棒的分类器 f’，使得 f’（X˜） = f（X），或者通过转换 T 对 X˜ 进行转换，使得 f（T（X˜）） = f（X）。（通俗地解释也就是通过特定操作，不论输入什么形式的点云，使得输出效果和输入干净的点云得到的结果没有不同）</p>
-<p>为了实现这一目标，作者提出了一种由去噪器和上采样器组成的方法，如图所示，将一个异常值去除层和一个上采样网络添加到分类网络的前端，以实现网络的鲁棒性。这些层是在ModelNet40数据集上进行点云分类的背景下设计的，并与训练过的分类器 f 一起使用。防御函数被表示为 D: X’ → Xˆ，其中 Xˆ 表示去噪和上采样后的点云。受到用于生成更密集和均匀点集的上采样网络的启发，作者定义了损失函数：</p>
-<p>$\mathcal{L}(\mathbf{X}, \hat{\mathbf{X}})=\mathcal{L}_{r e c}(\mathbf{X}, \hat{\mathbf{X}})+\beta \mathcal{L}_{r e p}(\mathbf{X}, \hat{\mathbf{X}})+\gamma|\boldsymbol{\theta}|_2^2$ ，其中：</p>
-<p>（1）$\mathcal{L}_{r e c}$ 是重构损失，衡量原始输入 $\mathbf{X}$ 和经过去噪和上采样处理后的输出 $\hat{\mathbf{X}}$ 之间的差异。这一项旨在确保处理后的点云仍然能够准确地还原为原始的点云。</p>
-<p>（2）$\mathcal{L}_{r e p}$ 是排斥损失。引入了一个乘数 $\beta$ ，用于平衡重构损失和排斥损失。排斥损失的目标是确保点云中的点相互之间分布得足够远，以提高网络对于对抗性攻击的鲁棒性。</p>
-<p>（3）$\gamma|\boldsymbol{\theta}|_2^2$ 是权重衰减项，其中 $\gamma$ 是权重衰减的乘数， $|\boldsymbol{\theta}|_2^2$ 表示网络参数 $\boldsymbol{\theta}$ 的 L2 范数的平方。这一项的引入有助于防止过拟合，促使网络的参数保持较小的值。这个损失函数的设计旨在通过重构和排斥两方面的损失来训练网络，以提高网络的对抗性。</p>
+<h3 id="3-U3DS-Methodology">3 U3DS Methodology</h3>
+<p>这项工作的目标是学习一个语义分割函数<code>gθ</code>，它能够仅使用坐标<code>c</code>和特征<code>f</code>对点集<code>P</code>进行无监督预测每个点的标签。</p>
+<p>如下图所示，对于每个输入点区域，首先应用两种不同的颜色变换，然后将它们转换为体积域。对于顶部行的路径1，在将体素化特征馈送到模型之前执行几何变换。在前向传递之后，对输出特征执行相应的逆几何变换，以确保该表示与未经变换的路径2共享相同的属性。随后，从不同的点云块中聚类特征，并产生两组聚类中心和标签，这些标签可以用于进一步的训练和从不同路径组装的损失。</p>
 <p><img src="1.png" alt=""></p>
 <hr>
-<h4 id="3-1-Statistical-Outlier-Removal-（SOR）">3.1. Statistical Outlier Removal （SOR）</h4>
-<p>由3D扫描仪生成的原始点云数据中存在离群值。为了纠正这些不规则性，提出了一种统计异常值去除方法（Statistical Outlier Removal，简称SOR），该方法通过计算最近邻距离的均值 μ 和标准差 σ 来修正这些异常值，并裁剪那些位于 μ ± α · σ 范围之外的点，其中 α 取决于分析邻域的大小。在这里，采用了 <a href="#s3">k-最近邻（kNN）</a>方法进行异常值去除。具体而言，对于点云 X 中的每个点 xi，其 kNN 点集被定义为 $k n n\left(\mathbf{x}_i, k\right)$。然后，每个点 $\mathbf{x}_i$ 到其 kNN 中所有点的平均距离 $d_i$ 被表示为：</p>
-<p>$$d_i=\frac{1}{k} \sum_{\mathbf{x}_j \in k n n\left(\mathbf{x}_i, k\right)}\left|\mathbf{x}_i-\mathbf{x}_j\right|_2, \quad i=1, \ldots, n$$</p>
-<p>这个公式表示对于点云中的每个点 ，其 <em>k</em>-最近邻（k-nearest neighbors，简称 kNN）点集合的平均距离的计算。</p>
-<p>$d_i$ ：表示点 $\mathbf{x}_i$ 到其 $k$ 个最近邻点的平均距离。</p>
-<p>$\mathbf{x}_j$ ：是 $\mathbf{x}_i$ 的 $k$ 个最近邻点之一。</p>
-<p>$k$ ：是指定的最近邻数量。</p>
-<p>具体的计算过程是，对于每个点 $\mathbf{x}_i$ ，都计算它与其 $k$ 个最近邻点的欧氏距离，然后取这些距离的平均值，即将每个点  到$\mathbf{x}_i$ 其最近邻点的距离加总，再除以 $k$ 。这里 $n$ 表示点云中点的总数。这个公式的结果给出了每个点与其最近邻点的平均距离，是统计异常值去除方法中用于确定距离阈值的一部分。所有这些距离的均值和标准差被计算，以确定一个距离阈值：</p>
-<p>$$\begin{gathered}\bar{d}=\frac{1}{n} \sum_i^n d_i, \quad i=1, \ldots, n,\end{gathered}$$</p>
-<p>$$\begin{gathered} \ \sigma=\sqrt{\frac{1}{n} \sum_i^n\left(d_i-\bar{d}_i\right)^2} .\end{gathered}$$</p>
-<p>这组公式用于计算距离的均值 $\bar{d}$ 和标准差 $\sigma$ 。这两个统计量在之后的步骤中会被用来确定距离的阈值，以便在统计异常值去除中裁剪那些位于范围之外的点。</p>
-<p>接着，通过裁剪那些落在 μ ± α · σ 范围之外的点，得到修剪后的点集 $\mathbf{X}^{\prime}$，表示为</p>
-<p>$$ \mathbf{X}^{\prime}=\left\{\mathbf{x}_i \mid d_i &lt; \bar{d}+\alpha \cdot \sigma\right\} $$</p>
-<p>根据公式，通过检查每个点的平均距离 $\bar{d}$ 是否小于阈值 $\bar{d}+\alpha \cdot \sigma$ ，可以确定哪些点应该保留在裁剪后的点云数据集中。如果小于这个阈值，那么该点被认为是正常的，将被保留；否则，被认为是离群点，将被移除。这个操作的目的是去除原始点云数据中的离群值，使得点云更加平滑和整洁。调整参数 $\alpha$ 的值可以影响裁剪的严格程度，进而影响最终的点云数据的质量。</p>
-<p>文中指出，尽管攻击者成功欺骗了分类网络，但总会有一定比例的点不可避免地变成异常点，并被统计异常值去除方法捕获并删除。C&amp;W攻击使一些点偏离点云表面的流形，这些异常点主要误导了分类性能。因此，通过预处理层去除的异常值越多，对抗性例子的防御能力就越好。</p>
-<p>$p=\frac{\left|\mathbf{X}_{a d v} \cap\left(\mathbf{X}-\mathbf{X}^{\prime}\right)\right|}{|\mathbf{X}|-\left|\mathbf{X}^{\prime}\right|}$，整个公式表示了对抗性点在被去除的点集中的相对百分比，即被去除的点中有多少是对抗性点。这个百分比提 $p$ 供了一个衡量异常点去除方法对于防御对抗性攻击的效果的度量。这个公式里面各个参数的含义是：</p>
-<p>$\mathbf{X}_{adv}$：表示对抗性点的集合。这个集合的定义因不同的对抗性失真约束而有所不同。</p>
-<p>$\mathbf{X}$：表示原始点云数据集，包含了所有的点。</p>
-<p>$\mathbf{X}^{\prime}$：表示被去除异常值（通过统计异常值去除方法）后的点集。</p>
-<p>$|\mathbf{X}|$：表示点云数据集中点 $\mathbf{X}$ 的总数。</p>
-<p>$|\mathbf{X}^{\prime}|$：表示被去除异常值后的点集中 $\mathbf{X}^{\prime}$ 点的总数。</p>
-<p>通过观察实验结果，作者使用上述Equation计算了SOR和SRS方法的对抗性点百分比，实验结果表明，大多数情况下 SOR方法删除的对抗性点比SRS方法更多。因此SOR方法在防御对抗性点云方面比SRS方法更为有效。</p>
-<hr>
-<h4 id="3-2-Upsampling-Network">3.2 Upsampling Network</h4>
-<p>作者在本节的目标是通过一种防御机制来保护一个分类模型 $f$ ，该模型面临由对手生成的扰动的点云。作者的方法受到流形假设的启发，该假设认为自然图像或点云位于低维流形上。已知扰动的点云偏离了自然点云的 <a href="#s4">低维流形</a>，而这个流形可以由深度网络来近似。为了提高点云的视觉质量，作者提出使用点云上采样将流形外的对抗性样本<strong>重新映射</strong>到自然流形上以重构表面。通过这种方式，对抗性扰动的鲁棒性是通过增强点云的视觉质量来实现的。这种方法相对于其他防御机制具有显著优势，因为它不会截断关键信息以实现鲁棒性。</p>
-<p>具体而言，由于这些扰动通常会删除点云的关键点，作者使用了一个点云上采样网络，该网络输出一个更密集的点云，该点云沿着目标对象的表面分布均匀。在这项工作中考虑的网络是Point Cloud Upsampling Network (PUNet)，该网络从3D模型的基于点的块中学习几何语义，其架构如图所示。</p>
-<p><img src="2.png" alt=""></p>
-<p>接下来是用于衡量点云重建质量的损失函数，其中作者使用了重构损失，其目标是最小化点云的 <a href="#s5">Chamfer距离</a>。重构损失定义如下：</p>
-<p><img src="3.png" alt=""></p>
-<p>$|\hat{\mathbf{X}}|_0$ 表示点云 $\hat{\mathbf{X}}$ 的点的数量。</p>
-<p>$\sum_{\mathbf{x}^{\prime} \in \hat{\mathbf{X}}}$ 表示对点云 $\hat{\mathbf{X}}$ 中的每个点 $\mathbf{x}^{\prime}$ 执行求和。</p>
-<p>$\min _{\mathbf{x} \in \mathbf{X}}\left|\mathbf{x}-\mathbf{x}^{\prime}\right|_2^2$ 表示对于给定的上采样点 $\mathbf{x}^{\prime}$，找到原始点云 $ \mathbf{X}$ 中与之距离最近的点 $\mathbf{x}$，并计算它们之间的 $L_2$ 范数的平方。</p>
-<p>$\frac{1}{|\hat{\mathbf{X}}|_0}$表示将所有这些最近点之间的平方 $L_2$ 范数求和并取平均，以得到平均每个上采样点的重构损失。</p>
-<p>因此，这个公式的目标是衡量原始点云和通过上采样得到的点云之间的差异，其中重构损失的值越小表示上采样后的点云越接近原始点云。这种损失通常用于评估上采样模型的性能，以确保生成的点云在结构上保持与原始点云的相似性。</p>
-<p>综上所述，总的算法流程如图所示：</p>
-<p><img src="4.png" alt=""></p>
-<p>以下是对算法的逐步解释：</p>
+<h4 id="3-1-Superpoint">3.1. Superpoint</h4>
+<p>在点云集合P中的每个点云<code>P1、P2、P3</code>等都使用<code>VCCS</code>方法获取初始<a href="#s1">超级点</a>。这些超级点可以表示为<code>&#123;SP11, SP21, SP31, ...&#125;，&#123;SP12, SP22, SP32, ...&#125;</code>等，其中<code>SPij</code>表示第<code>j</code>个点云中的第<code>i</code>个超级点。初始超级点可能会因不同的点云而有所变化。接下来，采用一种简单的策略来合并每个场景内的超级点：</p>
 <ol>
-<li><strong>输入：</strong> 算法接收一个点云 $X$，最近邻数量 $k$，异常值截断参数 $\alpha$，以及网络参数 $\theta$。</li>
-<li><strong>初始化：</strong> 初始时，生成一个空的点云 $X’$ 用于存储通过去噪操作保留的点。</li>
-<li><strong>计算平均距离：</strong> 对于每个点 $x_i$，计算它与最近的 $k$ 个邻居的平均距离 $d_i$。</li>
-<li><strong>计算平均距离的均值和标准差：</strong> 计算所有点的平均距离的均值 $\bar{d}$ 和标准差 $\sigma$。</li>
-<li><strong>去噪操作：</strong> 遍历点云 $X$ 中的每个点 $x_i$，如果 $d_i &lt; \bar{d} + \alpha \cdot \sigma$，将该点 $x_i$ 添加到 $X’$ 中，表示该点未被认为是异常点。</li>
-<li><strong>上采样操作：</strong> 将 $X’$ 输入到上采样网络中，生成上采样后的点云 $\bar{X}$。</li>
-<li><strong>分类操作：</strong> 将上采样后的点云 $ f(\bar{X}) $ 中，获取对应的预测标签 $l$。</li>
-<li><strong>输出：</strong> 返回预测标签 $l$。</li>
+<li>确定具有最小超级点<code>SPi1</code>以及其两个最接近的相邻超级点<code>SPk1、SPk2cos[SPi, SPk1]</code>；</li>
+<li>将最小超级点与具有更高余弦相似度的超级点合并；</li>
+<li>重复执行上述三个步骤，直到超级点达到预定数量。这种简单的方法基于相似的语义对象具有相似的法线的原则。最终，更新后的超级点变为<code>&#123;SPn11, SPn21, ...&#125;，&#123;SPn12, SPn22, ...&#125;</code>等，确保相同超级点内的点被分配相同的标签。将最终的超级点数量定义为参数<code>γsp</code>，对于所有数据集，经验上的最佳值为<code>γsp = 40</code>。</li>
 </ol>
-<p>这个算法的核心思想是通过去噪操作保留对点云分类有用的信息，然后通过上采样网络增加点的数量，最终通过分类网络进行预测。这样的防御方法旨在提高对抗性攻击的鲁棒性，使模型更难受到攻击。</p>
+<hr>
+<h4 id="3-2-Voxelization-and-Devoxelization（体素化和去体素化）">3.2. Voxelization and Devoxelization（体素化和去体素化）</h4>
+<p>对输入点云进行几何变换，以产生不同表示，其中采用了基于体素的架构。通过体素化和反体素化，本文提出了一个简单而有效的网络，其中只包含3D卷积层和批量归一化，没有任何额外的组件。</p>
+<p>具体而言，对于输入点块中的输入点坐标c和相应的特征f，在将原始点体素化之前对坐标c进行了归一化，以获得尺度不变性。具体地，将坐标c归一化为[0,1]，记为c∗。在这个过程中，点特征（包括坐标）不会改变，而归一化的坐标仅用于将特征转换为正确的体积空间。</p>
+<p>将具有归一化坐标c∗={x∗,y∗,z∗}的特征f转移到体素网格{Vm,p,q}时，体素网格的插值特征fi计算为位于网格中的点的特征的平均值。<br>
+$$<br>
+\begin{gathered}<br>
+\boldsymbol{V}<em>{m, p, q}=\frac{1}{K</em>{m, p, q}} \sum_{i=1}^n \boldsymbol{I}\left[\text { floor }\left(x_i^* \times r\right)=m\right. \<br>
+\left.\operatorname{floor}\left(y_i^* \times r\right)=p, \text { floor }\left(z_i^* \times r\right)=q\right] \times f_i<br>
+\end{gathered}<br>
+$$<br>
+这个方程描述了将具有归一化坐标的特征$f_i$转移到体素网格$V_{m,p,q}$的过程。具体来说，对于体素网格中的每个体素$(m, p, q)$，通过计算位于体素网格中的点的特征的平均值来计算插值特征。这里的$K_{m,p,q}$表示体素网格$(m, p, q)$中包含的点的数量。</p>
+<p>方程中的$\text{floor}$函数将归一化坐标$x_i^<em>, y_i^</em>, z_i^*$乘以$r$后取整，以将归一化坐标映射到体素网格的索引空间。$\boldsymbol{I}$是指示函数，当取整后的归一化坐标与体素网格索引匹配时取值为1，否则为0。通过对满足条件的点的特征进行求和并除以$K_{m,p,q}$，得到体素网格$(m, p, q)$中的插值特征。</p>
+<hr>
+<h4 id="3-3-Baseline-Clustering-and-Iteration">3.3. Baseline: Clustering and Iteration</h4>
+<p>（1）在点云中使用当前的嵌入和k均值<a href="#s2">聚类</a>来对具有超级点引导的点进行聚类。目标是最小化损失函数：<br>
+$$<br>
+\min <em>{\boldsymbol{l}, \boldsymbol{\mu}} \sum_i\left|f_i^{\prime}-\mu</em>{l_i^{s p}}\right|^2<br>
+$$<br>
+这个公式表示了一个优化问题，其目标是最小化所有点的特征与其所属聚类中心之间的欧氏距离的平方和。具体来说：</p>
+<ul>
+<li>$\boldsymbol{l}$表示每个点的聚类标签向量，$l_i^{sp}$表示点$i$的聚类标签。</li>
+<li>$\boldsymbol{\mu}$表示聚类中心向量，$\mu_{l_i^{sp}}$表示点$i$所属聚类的聚类中心。</li>
+<li>$f_i’$表示点$i$的特征。</li>
+<li>$|f_i^{\prime}-\mu_{l_i^{s p}}|^2$表示点$i$的特征与其所属聚类中心之间的欧氏距离的平方。</li>
+</ul>
+<p>因此，整个公式的目标是通过选择合适的聚类标签向量$\boldsymbol{l}$和聚类中心向量$\boldsymbol{\mu}$，使得所有点的特征与其所属聚类中心之间的欧氏距离的平方和最小化。</p>
+<p>（2）使用类标签作为伪标签，通过交叉熵损失训练分类器，在点云设置中表示为：<br>
+$$<br>
+\min <em>{\theta, W} \sum_i L</em>{C E}\left(g_W\left(f_i^{\prime}\right), l_i^{s p}, \boldsymbol{\mu}\right)<br>
+$$<br>
+这个公式表示的是一个损失函数，用于训练一个带参数 $W$ 的分类器 $g_W$，使其预测的结果尽可能接近真实的聚类标签 $l_i^{sp}$。具体来说：</p>
+<ul>
+<li>$\min$ 表示最小化损失函数的目标。</li>
+<li>$\theta$ 和 $W$ 分别表示分类器 $g_W$ 和其它网络参数的集合，我们要优化这些参数以最小化损失函数。</li>
+<li>$\sum_i$ 表示对所有样本点 $i$ 进行求和。</li>
+<li>$L_{CE}$ 表示交叉熵损失函数（Cross-Entropy Loss），用于衡量分类器的预测结果与真实标签之间的差异。</li>
+<li>$g_W\left(f_i^{\prime}\right)$ 表示分类器 $g_W$ 对样本点 $i$ 的特征表示 $f_i^{\prime}$ 的预测结果。</li>
+<li>$l_i^{sp}$ 表示样本点 $i$ 的真实聚类标签。</li>
+<li>$\boldsymbol{\mu}$ 表示聚类中心的集合。</li>
+</ul>
+<p>因此，这个损失函数的目标是最小化分类器的预测结果与真实的聚类标签之间的交叉熵损失。</p>
+<p>但是，在无监督设置下，训练一个参数分类器是非常具有挑战性的，因为伪标签会不断变化，这会使得训练分类器变得非常困难。因此，选择了一种更简单的方法，即仅根据样本点在特征空间中与聚类中心的余弦距离来标记样本点：<br>
+$$<br>
+L_{\text {cluster }}\left(f_i^{\prime}, l_i^{s p}, \boldsymbol{\mu}\right)=-\log \left(\frac{e^{-d\left(f_i^{\prime}, \mu_{l_i^{s p}}\right)}}{\sum_t e^{-d\left(f_i^{\prime}, \mu_t\right)}}\right)<br>
+$$<br>
+这个公式表示的是一个用于聚类的损失函数，通常被称为负对数似然损失函数（Negative Log-Likelihood Loss）。具体来说：</p>
+<ul>
+<li>$\min_\theta$ 表示要优化的目标是最小化损失函数，其中 $\theta$ 表示网络参数的集合，要优化这些参数以最小化损失函数。</li>
+<li>$\sum_i$ 表示对所有样本点 $i$ 进行求和。</li>
+<li>$L_{\text{cluster}}$ 表示聚类损失函数，用于衡量样本点 $i$ 的特征表示 $f_i^{\prime}$ 与聚类中心 $\mu_{l_i^{sp}}^{sp}$ 之间的距离。</li>
+<li>$-\log\left(\frac{e^{-d\left(f_i^{\prime}, \mu_{l_i^{sp}}^{sp}\right)}}{\sum_t e^{-d\left(f_i^{\prime}, \mu_t\right)}}\right)$ 是计算每个样本点的损失值。其中，$d$ 表示特征之间的距离度量，通常使用欧式距离或余弦相似度等。这个式子的含义是将样本点 $i$ 的特征表示 $f_i^{\prime}$ 与所有聚类中心 $\mu_t$ 之间的距离计算为一个概率分布，然后取该分布下样本点 $i$ 对应的聚类中心的概率的负对数作为损失值。</li>
+</ul>
+<p>因此，这个损失函数的目标是最小化每个样本点的特征表示与其所属聚类中心之间的距离的负对数似然。</p>
+<hr>
+<h4 id="3-4-Volumetric-Transformations">3.4. Volumetric Transformations</h4>
+<p>这段描述涉及到在无监督环境下提高鲁棒性的方法，通过利用点云的体积表示的不变性和等变性来实现。</p>
+<ol>
+<li><strong>不变性（Invariance）</strong>：指的是在应用不同的变换（如颜色抖动）之后，标签不应该发生变化。换句话说，即使对输入数据进行了一些变换，但标签仍然应该保持不变。</li>
+<li><strong>等变性（Equivariance）</strong>：指的是在体积领域中，当我们对点云应用几何变换时，相应的3D卷积特征应该以类似的方式进行变换，并且相应的标签也应该根据这个变换进行调整。换句话说，经过几何变换后，点云的体积表示和标签应该保持相对关系。</li>
+</ol>
+<p>为了实现这种不变性和等变性，作者提出了两个处理不同表示的流程，分别称为路径1和路径2。为了为单个输入块生成两种不同的表示，首先在提取体积特征之前对其进行几何变换，然后对最终的体素特征进行相应的逆变换。具体来说，G和G−1分别表示体素特征的几何变换和逆变换，O表示颜色变换。对于点c和其特征f，对原始特征f应用不同的颜色变换：</p>
+<p>$$<br>
+\boldsymbol{f}_1=\boldsymbol{O}_1(\boldsymbol{f}), \boldsymbol{f}_2=\boldsymbol{O}_2(\boldsymbol{f})<br>
+$$<br>
+接下来，将这两个特征转换为体素网格：<br>
+$$<br>
+\boldsymbol{v}_1=\boldsymbol{Z}\left(\boldsymbol{f}_1, \boldsymbol{c}_1^<em>\right), \boldsymbol{v}_2=\boldsymbol{Z}\left(\boldsymbol{f}_2, \boldsymbol{c}_2^</em>\right)<br>
+$$<br>
+这个公式描述了如何将原始的特征表示转换为体素化的特征表示。具体来说，对于第一个路径，使用体素化操作Z将特征表示f1和规范化的坐标c1转换为体素化的特征表示v1。对于第二个路径，同样地，使用体素化操作Z将特征表示f2和规范化的坐标c2转换为体素化的特征表示v2。</p>
+<p>在这之后，体素化特征变换被应用到体积领域中：只有路径1的特征被变换，而另一个保持不变。几何变换作用于体素化特征v，相应的逆几何变换作用于输出的体素特征v_out：<br>
+$$<br>
+\boldsymbol{v}<em>1^{\text {out }}=\boldsymbol{G}^{-1}\left{g</em>\theta\left[\boldsymbol{G}\left(\boldsymbol{v}_1\right)\right]\right}, \boldsymbol{v}<em>2^{\text {out }}=g</em>\theta\left(\boldsymbol{v}_2\right)<br>
+$$<br>
+这个公式描述了两个路径的处理过程。第一个路径中，先对体素化特征v1进行几何变换G，然后通过参数为θ的卷积网络gθ处理，最后再应用逆几何变换G^(-1)。第二个路径中，直接通过参数为θ的卷积网络gθ处理体素化特征v2。</p>
+<p>随后，进行去体素化以获得聚类特征：<br>
+$$<br>
+\boldsymbol{f}_1^{\prime}=\boldsymbol{Z}^{-1}\left(\boldsymbol{v}_1^{\text {out }}, \boldsymbol{c}_1^<em>\right), \boldsymbol{f}_2^{\prime}=\boldsymbol{Z}^{-1}\left(\boldsymbol{v}_2^{\text {out }}, \boldsymbol{c}_2^</em>\right)<br>
+$$<br>
+这个公式描述了如何将输出的体素化特征转换回原始的特征表示。具体来说，对于第一个路径，使用逆体素化操作Z(-1)将体素化的输出特征v1out以及规范化的坐标c1转换回原始的特征表示f1’。对于第二个路径，同样地，使用逆体素化操作Z(-1)将体素化的输出特征v2out以及规范化的坐标c2转换回原始的特征表示f2’。</p>
+<hr>
+<h4 id="3-5-Losses-and-Labelling-Scheme">3.5. Losses and Labelling Scheme</h4>
+<p>这段描述了在给定输入点云c和特征f的情况下，根据在第3.3节介绍的颜色和几何变换，可以产生两种不同的特征表示f’1和f’2。利用这两种特征表示，分别对它们进行聚类，得到两组中心和伪标签：<br>
+$$<br>
+\begin{aligned}<br>
+&amp; \boldsymbol{l}^{(\mathbf{1})}, \boldsymbol{\mu}^{(\mathbf{1})}=\arg \min <em>{\boldsymbol{l}, \boldsymbol{\mu}} \sum_i\left|f</em>{1 i}^{\prime}-\mu_{l_i^{s p}}\right|^2 \<br>
+&amp; \boldsymbol{l}^{(\mathbf{2})}, \boldsymbol{\mu}^{(\mathbf{2})}=\arg \min <em>{\boldsymbol{l}, \boldsymbol{\mu}} \sum_i\left|f</em>{2 i}^{\prime}-\mu_{l_i^{s p}}\right|^2<br>
+\end{aligned}<br>
+$$<br>
+这个公式表示了对两种不同特征表示进行聚类的过程。其中，l^(1) 和 µ^(1) 分别表示第一种特征表示的聚类标签和聚类中心，它们是通过最小化每个数据点f’1i与其对应聚类中心的欧氏距离的平方和来确定的。l2类似。</p>
+<p>设置两个损失函数。首先，特征表示应该与同一路径产生的伪标签匹配：<br>
+$$<br>
+\begin{array}{r}<br>
+L_1=\sum_i L_{\text {cluster }}\left(f_{1 i}^{\prime}, l_i^{s p(1)}, \boldsymbol{\mu}^{(\mathbf{1})}\right)+ \<br>
+\sum_i L_{\text {cluster }}\left(f_{2 i}^{\prime}, l_i^{s p(2)}, \boldsymbol{\mu}^{(\mathbf{2})}\right)<br>
+\end{array}<br>
+$$<br>
+类似地，特征表示应该同时匹配不同路径产生的伪标签：<br>
+$$<br>
+\begin{array}{r}<br>
+L_2=\sum_i L_{\text {cluster }}\left(f_{1 i}^{\prime}, l_i^{s p(2)}, \boldsymbol{\mu}^{(2)}\right)+ \<br>
+\sum_i L_{\text {cluster }}\left(f_{2 i}^{\prime}, l_i^{s p(1)}, \boldsymbol{\mu}^{(\mathbf{1})}\right)<br>
+\end{array}<br>
+$$<br>
+最终的训练目标是他们的总和：<br>
+$$<br>
+L_{\text {final }}=L_1+L_2<br>
+$$<br>
+这个损失函数鼓励来自一个路径的特征与另一个路径生成的标签保持一致，这样鼓励网络以与不同路径的特征表示相似的方式进行标记。</p>
 <hr>
 <h3 id="4-Experiments">4. Experiments</h3>
-<h4 id="4-1-Experimental-Setup">4.1 Experimental Setup</h4>
-<p><strong>数据集：</strong></p>
+<p>实现细节：采用了一个简单但有效的框架，其中包含8层3D卷积，每一层都使用了3D批归一化和<code>Leaky ReLU</code>激活函数。输入点云包含12维特征，即在归一化块坐标系中的点坐标（x、y、z）、颜色信息（R、G、B）、每个点的法线以及原始场景坐标系中的归一化原始坐标。注，<code>SemanticKITTI</code>数据集中没有提供颜色信息。</p>
+<p>训练细节：使用批量大小为4，每个批次的数据包含4096个点，适用于所有数据集。选择的优化器是随机梯度下降（<code>SGD</code>），学习率为<code>1e-4</code>，权重衰减为<code>1e-5</code>。训练网络共10个<code>epochs</code>。在体积域中的几何变换中，分别沿给定的x、y和z轴反转张量的顺序。颜色变换包括随机对比度和随机亮度调整。模型的输出特征维度和聚类特征维度均设置为128。体素网格的分辨率设置为32。此外，在<code>GPU</code>上使用<code>FAISS</code>库通过采用<code>mini-batch k-means</code>方法计算聚类中心。</p>
+<p>评估过程：为了与其他方法进行评估和比较，选择了两种经典的无监督聚类方法，<code>k-means</code>和<code>DBSCAN</code>，以及唯一的无监督语义分割方法<code>GrowSP</code>作为基准。使用三个指标进行评估：总体精度（<code>oAcc</code>）、平均精度（<code>mAcc</code>）和平均交并比（<code>mIoU</code>），这些指标适用于所有数据集。所有实验都在单个<code>NVIDIA RTX 2080Ti GPU</code>上进行。</p>
+<h4 id="4-1-Datasets">4.1. Datasets</h4>
+<p>在两个室内和一个室外基准数据集上评估了<code>U3DS3</code>：<code>S3DIS</code>，<code>ScanNet</code>和<code>SemanticKITTI</code>。</p>
 <ul>
-<li>使用了 ModelNet40 数据集，其中包含来自40个不同物体类别的12,311个CAD模型。这些模型中的9,843个用于训练，剩余的2,468个用于测试。</li>
-<li>在生成对抗性点云之前，从每个对象的表面均匀采样了1,024个点，并将它们重新缩放到一个单位立方体内。这一步骤的目的是为了规范化数据的尺寸。</li>
-<li>使用了 Visionair 数据集来训练 DUP-Net，该数据集包含来自 Visionair 仓库的60个不同模型，涵盖了光滑的非刚性物体和陡峭的刚性物体。</li>
-</ul>
-<p><strong>网络和实现细节：</strong></p>
-<ul>
-<li>使用了 PointNet 和 PointNet++ 作为目标分类网络，并使用默认设置对模型进行训练。</li>
-<li>对于提出的 DUP-Net 的训练，对于 ModelNet40，上采样点的数量为2048，上采样率为2；对于 Visionair 数据集，上采样点的数量为4096，上采样率为4。</li>
-<li>每个输入样本包含 $n = 1024$ 个点，用于进行训练。</li>
-<li>平衡权重 $\beta$ 和 $\gamma$ 分别被设置为 0.01 和 $10^{-5}$。</li>
-<li>实现基于 TensorFlow，使用 Adam 优化算法进行训练，训练120个epochs，每个小批次包含28个样本，学习率为0.001。</li>
-</ul>
-<p><strong>攻击评估：</strong></p>
-<ul>
-<li>攻击者首先使用非定向/定向模型生成对抗性样本，然后在目标和防御模型上评估这些生成的对抗性样本的分类准确性。</li>
-<li>非定向/定向模型的低准确性表明攻击是成功的，而防御模型的高准确性表明防御是有效的。</li>
+<li><code>S3DIS</code>是一个大规模室内场景数据集，包含六个区域的271个点云房间。点云场景中每个点的注释属于13个语义类别。在区域1、2、3、4、6中训练模型，并根据在区域5中进行测试。为了与<code>GrowSP</code>进行公平比较，排除了杂乱物，并使用12个类别进行测试，但也使用13个类别进行测试，以与现有的监督、弱监督和半监督方法进行比较。</li>
+<li><code>ScanNet-v2</code>是一个<code>RGB-D</code>真实室内数据集。它包含1201个用于训练的场景，312个用于验证，和100个用于在线测试。对于场景语义分割，它具有40个类别和一个未标记的类别用于训练，以及20个类别用于测试。在验证集上与现有的聚类和无监督方法进行比较。</li>
+<li><code>SemanticKITTI</code>是一个基于<code>KITTI Vision Odometry Benchmark</code>的大规模室外数据集。对于语义分割任务，它提供了19个类别的点级注释的22个序列。每个序列包含由汽车激光雷达收集的一系列场景扫描，其中序列11-21用于在线测试，08是验证集，其余是训练集。</li>
+<li>数据准备：对于所有数据集，选择每个场景的超级点数量为<code>γsp = 40</code>。首先，对<code>S3DIS</code>和<code>ScanNet</code>进行均匀降采样，子网格大小为0.03，然后按照<code>PointCNN</code>的方法将点云采样成块，以确保批处理中的每个数据样本具有相同数量的点。对于<code>S3DIS</code>和<code>ScanNet</code>，块大小为<code>xy</code>平面上的1.5×1.5，每个块包含4096个点。对于<code>SemanticKITTI</code>，将每个块的大小设置为<code>xy</code>平面上的5×5，包含4096个点。对于每个点云，利用<code>VCCS</code>方法推导出初始的超级点。然后，将这些超级点合并以增强分割效果，具体细节见3.1节。此外，由于室外<code>SemanticKITTI</code>数据集中道路的特点和优势，应用<code>RANSAC</code>方法拟合一个平面作为道路，以改善超级点的生成。</li>
 </ul>
 <hr>
-<h4 id="4-2-Ablation-Study">4.2. Ablation Study</h4>
-<h5 id="SOR-PU-Net-as-Defense">SOR &amp; PU-Net as Defense</h5>
-<p>SOR专门针对的是生成对抗样本的攻击，通过删除对应点实现防御，表格如图所示。</p>
-<p><img src="5.png" alt=""></p>
-<p>PU-Net专门针对的是基于显著性点删除的攻击，其中攻击者有意删除或修改输入点云中的一些关键点，以干扰目标分类模型的性能。结果表明，上采样网络有助于对抗性示例填充对于分类至关重要的缺失点，尤其是在删除数量为200时，防御几乎提高了9%。此外，上采样网络可以在小型数据集上进行训练，并且对来自其他点云数据集生成的对抗性攻击具有良好的泛化能力。</p>
-<p><img src="6.png" alt=""></p>
+<h4 id="4-2-Results-and-Comparison-on-Benchmarks">4.2. Results and Comparison on Benchmarks</h4>
+<p>在室内<code>S3DIS、ScanNet</code>和室外<code>SemanticKITTI</code>基准测试中，对<code>U3DS3</code>方法进行了全面评估。下表分别展示了在<code>ScanNet</code>、<code>SemanticKITTI</code>和<code>S3DIS</code>数据集上的语义分割结果。毫不奇怪，全监督方法提供了最佳性能。从表3可以看出，我们的方法明显优于现有的聚类方法，在<code>S3DIS</code>数据集上实现了75.5%的整体准确率和42.8的<code>mIoU</code>。此外，本文的方法甚至接近全监督方法和一些最新的弱监督方法的性能，这对无监督语义3D场景分割是一大进步。</p>
+<p>此外，在<code>ScanNet</code>和<code>SemanticKITTI</code>数据集上也优于<code>GrowSP</code>方法。具体而言，表1显示，本文的方法在结果上比它们分别提高了+1.9的<code>mIoU</code>和+2.6的<code>mAcc</code>。此外，表2显示，尽管<code>oAcc</code>略低，但本文的方法比<code>GrowSP</code>高出1的<code>mIoU</code>和3.4的<code>mAcc</code>。图3展示了在<code>S3DIS</code>上的定性比较，进一步证明了本文方法的优越性。</p>
+<p><img src="2.png" alt=""></p>
+<p><img src="3.png" alt=""></p>
+<p><img src="4.png" alt=""></p>
 <hr>
-<h4 id="4-3-Evaluation-Results-of-DUP-Net">4.3. Evaluation Results of DUP-Net</h4>
-<p>表格1中的最后一列显示了提出的DUP-Net针对PointNet上不同攻击（基于C&amp;W的点移动/点添加/簇添加/物体添加 [34] 和点删除）的整体防御准确性。对于干净的点云数据，DUP-Net略微降低了2%的检测准确性；对于C&amp;W攻击，DUP-Net表现优于基线SRS、提出的SOR和提出的PU-Net。与PU-Net相比，DUP-Net的性能更好，这表明异常值移除操作有效地提升了防御性能。**对于点删除攻击，DUP-Net的防御性能略逊于独立使用PU-Net，但仍优于基线，这意味着攻击者对局部形状进行的大幅修改导致了一些局部形状在很大程度上消失，而SOR防御进一步破坏了关键的骨架信息。（但是我们的论文工作只存在C&amp;W类型的攻击，所以不会出现这样的负反馈现象）**对于C&amp;W簇和C&amp;W物体攻击，本文的DUP-Net防御将准确性提高到87.6%和68.4%；在SRS防御的情况下，准确性分别为92.0%和92.4%。这些结果进一步证明了我们强大的防御能力。</p>
-<p>总体而言，DUP-Net作为预处理网络有助于确保基于神经网络的分类的稳健性，并抵御来自对抗性点云的攻击。此外，DUP-Net是不可微分的，这使得攻击者难以实施二次对抗性攻击。</p>
+<h4 id="4-3-Analysis">4.3. Analysis</h4>
+<p><code>U3DS3</code>方法在室内和室外数据集上表现出与现有基线相比具有潜力的性能水平。与<code>GrowSP</code>方法相比，在<code>ScanNet</code>和<code>SemanticKITTI</code>数据集上取得了更优异的结果。随着场景复杂性的增加，<code>GrowSP</code>的超级点质量往往会下降。相反，本文的方法不仅包含了预分割，还采用了双通道训练算法，利用了不变性和等变性的概念。然而，在实际场景中可能会出现轻微的性能下降。为了解决这个问题，实施了三种策略：</p>
+<p>(i) 当集合中的另一个簇达到零实体时，分割最大的簇（在聚类过程中，如果某个聚类簇中的点数降至零，即没有任何点被分配到该簇中，而另一个簇中的点数不为零，那么就会将这个非零簇中的点进行分割，以避免聚类结果中出现没有任何点的簇。具体来说，这意味着将非零簇中的点按照某种标准重新划分到其他簇中，从而确保每个簇至少包含一个点）；</p>
+<p>(ii) 在更新过程中应用轻微的质心扰动（在聚类过程中，在每次更新聚类中心（质心）的时候，会对质心进行轻微的变动或扰动。这种扰动可以是随机的小幅度改变质心的位置，目的是为了使聚类过程更加稳定，避免质心陷入局部最优解，从而增加聚类结果的鲁棒性和多样性）；</p>
+<p>(iii) 在每个时期使用每类伪标签比例进行损失平衡的重新加权（这句话指的是在训练模型的每个<code>epoch</code>中，根据每个类别的伪标签数量比例来重新加权损失函数，以实现损失函数在不同类别之间的平衡。在训练过程中，可能会出现某些类别的样本数量远远多于其他类别，导致损失函数过度关注样本数量多的类别而忽略数量少的类别，从而影响模型的性能。通过重新加权损失函数，可以使不同类别的损失对模型训练的影响更加平衡，从而提高模型在所有类别上的表现）。</p>
+<p>此外，我们的双通道方法加速了训练过程中的收敛时间。例如，当只使用一个通道进行训练时，需要大约8个时期才能达到收敛，而双通道方法则只需要2-3个时期即可实现收敛。</p>
 <hr>
-<h4 id="4-4-Visualization">4.4. Visualization</h4>
-<p><img src="7.png" alt=""></p>
-<p>如图所示是可视化结果，前四列为一组后三列为一组，后三列是抹除点的攻击，和我们工作无关，暂时不用考虑。</p>
+<h3 id="5-Conclusion-and-Discussion">5. Conclusion and Discussion</h3>
+<p>本文提出一个新颖的通用无监督语义分割方法，适用于室内和室外具有对象和背景的3D场景。该方法利用了一种简单但有效的框架，通过聚类和迭代生成，在保持体积表示的不变性和等变性的同时利用了超级点的辅助。实验证明，在<code>S3DIS</code>、<code>ScanNet</code>和<code>SemanticKITTI</code>数据集上，表现出了令人满意的性能，证明了方法优于所有现有的基线方法。这项工作旨在为3D无监督学习提供更多见解。未来的工作将探索改进的点采样策略，并将其扩展到基于点或图的表示，从而使其受益于与无监督学习、<a href="#s3">度量学习</a>和<a href="#s4">3D表示学习</a>相关的其他领域。</p>
 <hr>
-<h3 id="5-Conclusion">5. Conclusion</h3>
-<p>在这篇论文中，提出了一个由统计离群值去除（SOR）层和点云上采样网络（PU-Net）组成的去噪和上采样网络（DUP-Net），用于抵御3D点云对抗样本，提出使用点云恢复技术来净化受扰动的点云。作为初始步骤，应用SOR来抑制基于离群值的噪音模式，并制定一个难以绕过的不可微分层。方法的核心组件是上采样操作，它在增强点分辨率的同时消除了类似于图像超分辨率操作的对抗性模式。实验证明，仅使用点云上采样网络就足以恢复分类器对正确类别的判别能力；此外，统计离群值去除步骤提供了额外的鲁棒性，因为它是一个不可微分的去噪操作。</p>
+<h3 id="名词解释及问题-a-id-s1-a">名词解释及问题 <a id="s1"></a></h3>
+<h4 id="超级点">超级点</h4>
+<p>超级点是指通过一种聚类算法，从原始点云中识别出来的一组紧密相连的点。超级点可以看作是点云中的局部区域，其中的点具有相似的特征或属性。超级点的识别可以帮助简化点云数据，并且有助于后续的特征提取和分析。</p>
+<p><code>VCCS</code>方法是指<code>Voxel Cloud Connectivity Segmentation</code>，是一种用于点云分割的聚类算法。该算法首先将点云数据转换为体素表示，然后通过计算相邻体素之间的连通性来识别超级点。<code>VCCS</code>方法在点云处理领域被广泛应用，可以有效地提取点云中的局部结构，并且具有良好的可扩展性和鲁棒性。</p>
 <hr>
-<p><a id="s1"></a></p>
-<h3 id="名词解释及问题">名词解释及问题</h3>
-<p><strong>重建表面平滑度</strong></p>
-<p>重建表面平滑度指的是在3D点云数据中通过一些操作或处理，使得表面在可视化时看起来更加平滑和连续。在3D点云中，表面通常是由大量的离散点表示的，而这些点之间可能存在缺失或不规则，导致在可视化时表面呈现出不光滑的外观。</p>
-<p>在文中提到的上下文中，采用Denoiser and UPsampler Network（DUP-Net）结构，通过两个模块来实现表面平滑度的重建。这两个模块分别是去噪器（Denoiser）和上采样器（Upsampler）。去噪器使用统计异常值去除（Statistical Outlier Removal，SOR），通过删除或调整离群点来去除数据中的噪声，从而提高表面的平滑性。而上采样器则通过在点云中添加新的点，使得表面更加密集，进而达到平滑的效果。<a id="s2"></a></p>
-<hr>
-<p><strong>非可微的去噪操作</strong></p>
-<p>非可微的去噪操作是指在某一点处不具备导数或梯度的去噪过程。在数学中，可微性表示函数在某一点处具有导数，也就是说，函数在该点处的变化率是定义良好的。然而，一些去噪方法可能包含一些非可微的运算，使得在这些点处无法明确定义导数。</p>
-<p>在神经网络和深度学习中，通常使用梯度下降等优化算法来调整模型参数以最小化损失函数。这就要求损失函数是可微的，以便计算梯度并进行参数更新。如果损失函数中包含非可微的操作，会导致计算梯度时出现问题。</p>
-<p>在上文中提到的文本中，提到统计异常值去除（Statistical Outlier Removal，SOR）作为去噪器，被标记为一种非可微的去噪操作。这可能是因为异常值去除可能采用一些阈值或非线性操作，导致在某些点上无法明确计算梯度。这种非可微的性质可能对神经网络的训练产生影响，因为梯度下降等优化算法通常要求可微性。因此，在设计防御机制时，选择非可微的去噪操作可能是出于增加对抗性攻击的难度或使得对抗样本更难生成的考虑。</p>
-<hr>
-<p><strong>为什么统计异常值去除是一个非可微的去噪操作就可以提供额外的鲁棒性？</strong></p>
-<p>可以通过以下几个方面来理解：</p>
-<ol>
-<li><strong>增加复杂性：</strong> 非可微的操作引入了在点云中进行去噪时的非线性特性，这使得对抗性攻击更难以生成。对抗性攻击通常是基于模型的梯度信息，而非可微的操作使得在这些点上无法准确计算梯度，从而增加了攻击的难度。</li>
-<li><strong>限制攻击者的信息：</strong> 非可微的去噪操作可能使得攻击者在生成对抗性样本时更难以了解模型的内部机制。攻击者通常依赖模型的梯度信息来生成对抗性扰动，而非可微性可能会限制攻击者对模型行为的了解。</li>
-<li><strong>提高鲁棒性：</strong> 由于SOR是一种去除离群值的操作，非可微性可能有助于使得去噪更加稳健。在非可微的情况下，对于输入数据中微小的变化，输出可能不会出现剧烈的变化，这有助于模型对于轻微扰动的鲁棒性。</li>
-</ol>
-<hr>
-<p><strong>非线性特性是什么？为什么去噪是非线性操作？为什么非线性操作会导致在某些点上无法明确计算梯度？</strong></p>
-<p>非线性特性指的是在数学和函数的上下文中，函数不遵循线性关系的性质。在线性代数中，一个函数如果同时满足加法和数乘的性质，就被称为线性函数。而非线性函数则不满足这些性质，可能包含乘法、除法、指数、对数等非线性运算。</p>
-<p>去噪操作通常是非线性的，因为噪声的性质可能是复杂的、非线性的，并且噪声的影响可能不仅仅是简单的加法。例如，去噪可能涉及到对像素值进行非线性的阈值处理、滤波、或其他形式的变换。这些非线性的操作可以更有效地捕捉和处理图像中的复杂噪声结构。</p>
-<p>在深度学习中，模型的训练通常涉及到梯度下降等优化算法，这些算法依赖于目标函数的梯度。梯度是函数在某一点的变化率，对线性函数而言，梯度是常数，对非线性函数而言，梯度可能在不同点处不同。</p>
-<p>为什么非线性操作会导致在某些点上无法明确计算梯度呢？</p>
-<ol>
-<li><strong>不可导性：</strong> 一些非线性操作在某些点上可能是不可导的。这意味着在这些点上，函数的导数（梯度）不存在，无法明确计算。例如，在阈值函数的跳跃点上，导数未定义。</li>
-<li><strong>不光滑性：</strong> 一些非线性操作可能导致函数在某些点上不光滑。梯度下降算法通常期望函数是光滑的，以便在梯度的指导下有效地更新参数。非线性操作可能破坏这种光滑性，使得在优化过程中更难处理。</li>
-</ol>
-<p>在文中提到的统计异常值去除（SOR）可能包含一些非线性的阈值判定或者排除机制，这可能导致在一些点上无法明确计算梯度，从而增加了模型对抗性攻击的难度。<a id="s3"></a></p>
-<hr>
-<p><strong>k-最近邻（kNN）</strong></p>
-<p>KNN（K-Nearest Neighbors，k近邻）是一种简单而直观的机器学习算法，通常用于分类和回归问题。该算法基于一个简单的思想——如果一个样本在特征空间中的k个最近邻居中的大多数属于某个类别，那么该样本也属于这个类别。以下是KNN算法的基本原理和步骤。</p>
-<p><strong>KNN的基本原理：</strong></p>
-<ol>
-<li>距离度量： KNN通过计算样本点间的距离来度量它们的相似性。常用的距离度量包括欧氏距离、曼哈顿距离、闵可夫斯基距离等。</li>
-<li>近邻选择： 对于一个给定的样本点，找到与其距离最近的k个训练集中的点，这些点称为其k个最近邻。</li>
-<li>多数表决： 统计k个最近邻中每个类别的出现频率，将出现频率最高的类别作为该样本的预测类别。</li>
-</ol>
-<p><strong>KNN的步骤：</strong></p>
-<ol>
-<li>选择K值： 选择一个合适的K值，它决定了在预测时考虑多少个最近邻的信息。</li>
-<li>计算距离： 对于测试样本，计算它与训练集中所有样本点的距离。</li>
-<li>找到最近邻： 选择距离最近的K个训练样本。</li>
-<li>投票决策： 根据最近邻的类别进行投票，将得票最多的类别作为测试样本的预测类别。</li>
-</ol>
-<p><strong>KNN的特点：</strong></p>
+<h4 id="聚类相关概念-a-id-s2-a">聚类相关概念<a id="s2"></a></h4>
+<p>聚类是一种无监督学习方法，其目标是将数据集中的样本划分为具有相似特征的若干个组，这些组被称为簇(cluster)。聚类算法根据数据点之间的相似性将它们分组在一起，而不需要事先知道每个样本的真实类别。</p>
 <ul>
-<li>简单易理解： KNN是一种非参数学习算法，没有复杂的模型假设，容易理解和实现。</li>
-<li>适用于小数据集： 在数据集较小的情况下，KNN的效果通常比较好。</li>
-<li>对异常值敏感： KNN对于异常值较为敏感，因为它的预测结果直接受到最近邻的影响。</li>
-<li>计算复杂度高： 随着训练集规模增大，KNN的计算复杂度也会增加，因为需要计算样本之间的距离。</li>
+<li>聚类标签是指每个样本被分配到的簇的标识或编号。在聚类过程中，每个样本都会被分配一个聚类标签，表示它属于哪个簇。</li>
+<li>聚类中心是每个簇的代表性点或中心点，通常是簇中所有样本点的平均值或质心。聚类算法的目标之一就是找到合适的聚类中心，使得簇中的样本与该中心的距离尽可能小。聚类中心的选择通常是在算法迭代过程中动态更新的。</li>
 </ul>
-<p>KNN在实际应用中常用于图像识别、手写数字识别、推荐系统等领域。选择合适的K值和距离度量方法是KNN应用中需要注意的关键因素。<a id="s4"></a></p>
 <hr>
-<p><strong>低维流形</strong></p>
-<p>低维流形是一个数学概念，用来描述在高维空间中的某个局部区域，数据的分布相对于整个高维空间而言具有较低的维度。直观上，我们可以将低维流形理解为数据在高维空间中弯曲、折叠或嵌入的结构，使得数据的自由度相对较少。</p>
-<p>举例来说，考虑一个三维空间的曲面，比如球面。尽管球面嵌套在三维空间中，但它实际上是一个二维的流形，因为在每一点上，表面上只需要两个自由度（例如，经度和纬度）来描述一个点的位置。这就是流形的低维性质：尽管嵌套在高维空间中，但在局部区域上，它的结构相对较简单。</p>
-<p>在机器学习和数据分析中，低维流形的概念被广泛用于理解高维数据的内在结构。许多真实世界的数据分布，特别是自然图像、语音信号等，通常在高维空间中有着较低维度的结构。这种低维结构可以使得对数据进行建模和分析更为有效。</p>
-<p>一些相关的观点和概念：</p>
-<ol>
-<li><strong>局部性质：</strong> 低维流形通常是局部性质的，即在空间中的小邻域内近似为低维。这使得在局部进行线性建模和分析成为可能。</li>
-<li><strong>流形假设：</strong> 机器学习中的流形假设指的是，真实数据分布通常集中在一个相对较小的低维流形上。这个假设是许多降维和特征学习方法的基础。</li>
-<li><strong>降维技术：</strong> 为了更好地理解和处理高维数据，降维技术被设计用来将数据映射到一个较低维的空间，同时保留尽可能多的信息。PCA（主成分分析）和t-SNE（t-distributed stochastic neighbor embedding）等算法就是基于低维流形概念的降维技术。</li>
-</ol>
-<p>总体而言，低维流形的概念提供了一种直观的方式来理解高维数据的结构，从而在机器学习和数据分析中发挥了重要作用。<a id="s5"></a></p>
+<h4 id="度量学习-a-id-s3-a">度量学习<a id="s3"></a></h4>
+<p>度量学习是一种机器学习方法，其目标是学习一个适当的度量（或距离）来度量数据之间的相似性或差异性。在度量学习中，通常会定义一个度量空间，其中每个数据样本都表示为一个向量，并学习一种距离函数或相似度函数，以便在该空间中有效地表示数据之间的关系。度量学习的主要目标是在学习过程中优化数据样本的表示，使得相似的样本之间的距离较小，而不相似的样本之间的距离较大。度量学习在许多领域都有广泛的应用，包括图像识别、文本分类、推荐系统等。</p>
 <hr>
-<p><strong>Chamfer距离</strong></p>
-<p>Chamfer距离是一种用于衡量两个点云之间相似性的距离度量。具体来说，给定两个点云，Chamfer距离通过计算每个点到另一个点云上最近的点之间的距离，并将这些距离进行求和来度量它们之间的相似性。</p>
-<p>Chamfer距离的目标是使两个点云之间的对应点距离尽可能小，以表达它们之间的相似性。这个距离度量在点云生成、点云匹配等任务中经常被用作损失函数，以引导模型生成具有更好结构的点云或找到两个点云之间的最佳对应。</p>
+<h4 id="3D表示学习-a-id-s4-a">3D表示学习<a id="s4"></a></h4>
+<p>3D表示学习是指在三维空间中学习有效地表示物体或场景的方法。与传统的机器学习任务不同，例如分类或回归，3D表示学习着重于学习数据的高维、结构化表示，以便能够捕捉物体或场景的几何形状、空间关系和语义信息等方面的特征。</p>
+<p>在3D表示学习中，常见的方法包括基于深度学习的方法和基于图形模型的方法。基于深度学习的方法通常利用卷积神经网络（CNN）或其变体来处理3D数据，例如点云、网格或体素。这些方法可以学习在3D空间中提取和表示特征的模型，从而实现诸如物体分类、物体检测、语义分割等任务。另一方面，基于图形模型的方法则更多地利用图论和图像处理的技术来表示和处理3D数据，例如使用图卷积网络（GCN）来学习3D场景中物体之间的关系。</p>
+<p>3D表示学习在计算机视觉、图形学、机器人学等领域都有着广泛的应用，例如在三维物体识别、场景理解、虚拟现实和增强现实等方面。</p>
 
                 
             </div>
@@ -705,7 +701,7 @@
                     </i>
                 </span>
                 <span class="reprint-info">
-                    <a href="http://example.com/2024/01/19/DUP-Net%E9%98%85%E8%AF%BB%E7%AC%94%E8%AE%B0/">http://example.com/2024/01/19/DUP-Net%E9%98%85%E8%AF%BB%E7%AC%94%E8%AE%B0/</a>
+                    <a href="http://example.com/2024/02/29/U3DS%E9%98%85%E8%AF%BB%E7%AC%94%E8%AE%B0/">http://example.com/2024/02/29/U3DS%E9%98%85%E8%AF%BB%E7%AC%94%E8%AE%B0/</a>
                 </span>
             </div>
             <div class="reprint__notice">
@@ -1177,17 +1173,18 @@
 <article id="prenext-posts" class="prev-next articles">
     <div class="row article-row">
         
-        <div class="article col s12 m6" data-aos="fade-up">
+        <div class="article col s12 m6" data-aos="fade-up" data-aos="fade-up">
             <div class="article-badge left-badge text-color">
-                <i class="fas fa-chevron-left"></i>&nbsp;上一篇</div>
+                <i class="far fa-dot-circle"></i>&nbsp;本篇
+            </div>
             <div class="card">
-                <a href="/2024/01/24/IF-Defense%E9%98%85%E8%AF%BB%E7%AC%94%E8%AE%B0/">
+                <a href="/2024/02/29/U3DS%E9%98%85%E8%AF%BB%E7%AC%94%E8%AE%B0/">
                     <div class="card-image">
                         
                         
-                        <img src="/medias/featureimages/18.jpg" class="responsive-img" alt="IF-Defense 2020 阅读笔记">
+                        <img src="/medias/featureimages/1.jpg" class="responsive-img" alt="U3DS阅读笔记">
                         
-                        <span class="card-title">IF-Defense 2020 阅读笔记</span>
+                        <span class="card-title">U3DS阅读笔记</span>
                     </div>
                 </a>
                 <div class="card-content article-content">
@@ -1197,9 +1194,9 @@
                         
                     </div>
                     <div class="publish-info">
-                        <span class="publish-date">
-                            <i class="far fa-clock fa-fw icon-date"></i>2024-01-24
-                        </span>
+                            <span class="publish-date">
+                                <i class="far fa-clock fa-fw icon-date"></i>2024-02-29
+                            </span>
                         <span class="publish-author">
                             
                             <i class="fas fa-bookmark fa-fw icon-category"></i>
@@ -1212,6 +1209,7 @@
                         </span>
                     </div>
                 </div>
+
                 
                 <div class="card-action article-tags">
                     
@@ -1230,13 +1228,13 @@
                 下一篇&nbsp;<i class="fas fa-chevron-right"></i>
             </div>
             <div class="card">
-                <a href="/2024/01/11/Cosmix%E9%98%85%E8%AF%BB%E7%AC%94%E8%AE%B0/">
+                <a href="/2024/01/25/IF-Defense%E5%A4%8D%E7%8E%B0%E7%AC%94%E8%AE%B0/">
                     <div class="card-image">
                         
                         
-                        <img src="/medias/featureimages/1.jpg" class="responsive-img" alt="Cosmix TPAMI 2023 阅读笔记">
+                        <img src="/medias/featureimages/5.jpg" class="responsive-img" alt="IF-Defense 2020 复现笔记">
                         
-                        <span class="card-title">Cosmix TPAMI 2023 阅读笔记</span>
+                        <span class="card-title">IF-Defense 2020 复现笔记</span>
                     </div>
                 </a>
                 <div class="card-content article-content">
@@ -1247,14 +1245,14 @@
                     </div>
                     <div class="publish-info">
                             <span class="publish-date">
-                                <i class="far fa-clock fa-fw icon-date"></i>2024-01-11
+                                <i class="far fa-clock fa-fw icon-date"></i>2024-01-25
                             </span>
                         <span class="publish-author">
                             
                             <i class="fas fa-bookmark fa-fw icon-category"></i>
                             
-                            <a href="/categories/%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB/" class="post-category">
-                                    论文阅读
+                            <a href="/categories/%E8%AE%BA%E6%96%87%E5%A4%8D%E7%8E%B0/" class="post-category">
+                                    论文复现
                                 </a>
                             
                             
